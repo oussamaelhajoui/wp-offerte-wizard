@@ -132,6 +132,26 @@ final class SubmissionTest extends TestCase
         $this->assertArrayHasKey('bouwplan-controle', SubmissionBuilder::build($a, '2026-11-26', Settings::defaults())['errors']);
     }
 
+    public function testPartialMeasuresGiveNoPrice(): void
+    {
+        $a = $this->jaAnswers();
+        $a['m2'] = 'bouwplan';
+        $a['plan_token'] = str_repeat('d', 32);
+        unset($a['m2_plafond']); // wanden en plafonds, maar de klant vulde alleen wanden in
+        $r = SubmissionBuilder::build($a, '2026-11-26', Settings::defaults());
+        $this->assertSame([], $r['errors']);
+        $this->assertSame(200.0, $r['data']['wand']);
+        $this->assertNull($r['data']['plafond']);
+        $this->assertNull($r['data']['pricing']);
+        $s = SubmissionBuilder::summary($r['data']);
+        $this->assertNull($s['totaal']);
+        $this->assertNull($s['stucwerk']);
+        $this->assertStringContainsString('Geen indicatie beschikbaar', Mailer::compose($r['data'])['body']);
+        // Bij alleen wanden is één maat wel genoeg voor een prijs.
+        $a['onderdelen'] = 'wanden';
+        $this->assertNotNull(SubmissionBuilder::build($a, '2026-11-26', Settings::defaults())['data']['pricing']);
+    }
+
     public function testBouwplanWithoutRoomsAllowsMissingM2(): void
     {
         $a = $this->jaAnswers();

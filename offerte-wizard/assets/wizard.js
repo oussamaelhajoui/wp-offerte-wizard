@@ -640,7 +640,7 @@
       main.appendChild(totals);
       sum();
     } else {
-      main.appendChild(el('div', 'note', 'We konden geen maten uitlezen. Vul de m² zelf in als je ze weet, of laat leeg: dan bekijken wij je bouwplan.'));
+      main.appendChild(el('div', 'note', 'We konden geen maten uitlezen. Vul de m² zelf in als je ze weet (voor een prijsindicatie hebben we alle maten nodig), of laat ze leeg: dan bekijken wij je bouwplan en rekenen we de prijs samen met je uit.'));
       if (need.wand) { main.appendChild(numberField('Wanden (m²)', function () { return a.m2_wand; }, function (v) { a.m2_wand = v; self.save(); })); }
       if (need.plafond) { main.appendChild(numberField('Plafonds (m²)', function () { return a.m2_plafond; }, function (v) { a.m2_plafond = v; self.save(); })); }
     }

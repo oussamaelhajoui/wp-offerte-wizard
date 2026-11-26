@@ -37,7 +37,9 @@ final class SubmissionBuilder
             $plafond = null;
         }
         $schilderen = (string) $answers['schilderen'] === 'ja';
-        $pricing = ($wand !== null || $plafond !== null)
+        // Alleen een prijs als alle te stucen oppervlakken bekend zijn: een prijs over maar een deel zou te laag zijn.
+        $complete = (!$need['wand'] || $wand !== null) && (!$need['plafond'] || $plafond !== null);
+        $pricing = ($complete && ($wand !== null || $plafond !== null))
             ? Pricing::compute((float) $wand, (float) $plafond, $schilderen, $settings)
             : null;
 
@@ -85,7 +87,8 @@ final class SubmissionBuilder
             'werk' => $werk,
             'wand' => $d['wand'],
             'plafond' => $d['plafond'],
-            'totaal' => $total > 0 ? $total : null,
+            // Zonder complete prijs tonen we geen losse m²: de klant krijgt dan de melding dat we samen rekenen.
+            'totaal' => ($total > 0 && $d['pricing'] !== null) ? $total : null,
             'stucwerk' => $p['stucwerk'] ?? null,
             'schilderwerk' => $p['schilderwerk'] ?? null,
             'dagen' => $d['pricing']['dagen'] ?? null,
