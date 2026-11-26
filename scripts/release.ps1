@@ -28,6 +28,9 @@ Invoke-Git push -u origin HEAD
 Invoke-Git tag $tag
 Invoke-Git push origin $tag
 
-gh release create $tag "$root\build\offerte-wizard.zip" "$root\build\offerte-wizard.json" --repo $repo --title "Offerte Wizard $version" --notes $json.changelog --latest
+# Notes via een bestand: aanhalingstekens in de tekst breken anders de argumenten in Windows PowerShell 5.1.
+$notes = "$root\build\release-notes.md"
+[IO.File]::WriteAllText($notes, [string]$json.changelog, (New-Object Text.UTF8Encoding $false))
+gh release create $tag "$root\build\offerte-wizard.zip" "$root\build\offerte-wizard.json" --repo $repo --title "Offerte Wizard $version" --notes-file $notes --latest
 if ($LASTEXITCODE -ne 0) { throw 'gh release create mislukt' }
 Write-Host "Release $tag staat online: https://github.com/$repo/releases/tag/$tag"
