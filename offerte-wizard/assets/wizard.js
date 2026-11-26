@@ -715,7 +715,7 @@
         var p = el('div', 'price');
         p.appendChild(el('span', 'tlabel', x[0]));
         p.appendChild(el('strong', null, 'Prijsindicatie is tussen ' + euro(x[1].min) + ' en ' + euro(x[1].max) + ' (inclusief arbeid, materiaal & BTW).'));
-        p.appendChild(el('span', 'muted small', 'Dit is een richtprijs op basis van de ingevulde informatie. De definitieve offerte volgt na ons gesprek.'));
+        p.appendChild(el('span', 'muted small', 'Dit is een richtprijs op basis van de ingevulde informatie. We nemen contact met je op voor de definitieve offerte.'));
         box.appendChild(p);
       });
       if (s.price_hidden && s.price_notice) {
@@ -729,7 +729,7 @@
         box.appendChild(card);
       }
     } else {
-      box.appendChild(el('p', 'muted', 'We berekenen de m² en de prijs samen met je tijdens ons telefoongesprek.'));
+      box.appendChild(el('p', 'muted', 'We nemen contact met je op om samen de m² en de prijs door te nemen.'));
     }
     main.appendChild(box);
     var notes = el('ul', 'items');
@@ -739,7 +739,7 @@
       li.appendChild(i); li.appendChild(el('span', 'tx', text));
       notes.appendChild(li);
     };
-    add('calendar', 'Op basis van je periode en de locatie' + (s.plaats ? ' in ' + s.plaats : '') + ' bevestigen we de planning tijdens ons telefoongesprek.');
+    add('calendar', 'Op basis van je periode en de locatie' + (s.plaats ? ' in ' + s.plaats : '') + ' nemen we contact met je op om de planning te bevestigen.');
     if (s.dagen) { add('clock', 'Aantal klusdagen zal ongeveer ' + s.dagen.min + '-' + s.dagen.max + ' dagen zijn. Stucwerk moet drogen; houd rekening met een droogtijd van 1,5-2 weken.'); }
     add('list', 'Goede voorbereiding is het halve werk. Maak de ruimtes zoveel mogelijk leeg en dek vloeren en ramen af; wij regelen de rest.');
     main.appendChild(notes);

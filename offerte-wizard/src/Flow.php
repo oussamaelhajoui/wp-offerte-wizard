@@ -151,7 +151,7 @@ final class Flow
                     ['kind' => 'field', 'name' => 'last_name', 'label' => 'Achternaam:', 'placeholder' => 'Bijvoorbeeld: Jansen', 'input' => 'text', 'autocomplete' => 'family-name'],
                     ['kind' => 'field', 'name' => 'email', 'label' => 'E-mailadres:', 'placeholder' => 'Bijvoorbeeld: jan@gmail.com', 'input' => 'email', 'autocomplete' => 'email', 'hint' => 'Hier sturen we je offerte naartoe.'],
                     ['kind' => 'field', 'name' => 'phone_number', 'label' => 'Telefoonnummer:', 'placeholder' => 'Bijvoorbeeld: 0656112233', 'input' => 'tel', 'autocomplete' => 'tel'],
-                    ['kind' => 'note', 'title' => 'Het begint met een persoonlijk belletje van iemand uit ons team.', 'text' => 'Dan bespreken we je klus, planning, budget en vragen. Zo weet je precies waar je aan toe bent en word je klus een stuk overzichtelijker.'],
+                    ['kind' => 'note', 'title' => 'We nemen persoonlijk contact met je op.', 'text' => 'Dan bespreken we je klus, planning, budget en vragen. Zo weet je precies waar je aan toe bent en wordt je klus een stuk overzichtelijker.'],
                     ['kind' => 'heading', 'text' => 'Vermeld hieronder waar de klus uitgevoerd moet worden.'],
                     ['kind' => 'field', 'name' => 'address_line', 'label' => 'Straat en huisnummer:', 'placeholder' => 'Bijvoorbeeld: Bloemstraat 11', 'input' => 'text', 'autocomplete' => 'street-address'],
                     ['kind' => 'field', 'name' => 'locality', 'label' => 'Plaats:', 'placeholder' => 'Bijvoorbeeld: Eindhoven', 'input' => 'text', 'autocomplete' => 'address-level2'],
