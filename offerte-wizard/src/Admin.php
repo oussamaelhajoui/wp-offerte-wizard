@@ -58,6 +58,7 @@ final class Admin
             ],
             'Na het versturen: wat krijgt de klant?' => [
                 ['show_price', 'Toon de prijsindicatie aan de klant op het overzicht', 'checkbox', 'Uit = de klant ziet alleen "aanvraag ontvangen"; jij krijgt de berekende prijs wel in de mail.'],
+                ['hidden_price_message', 'Bericht als de prijs niet getoond wordt', 'textarea', 'Dit leest de klant op het eindscherm in plaats van de prijs, en in de ontvangstbevestiging (als die aan staat). Bijvoorbeeld: "Je persoonlijke offerte ontvang je binnen 24 uur per mail."'],
                 ['customer_mail', 'Mail naar de klant', 'select', 'Bij "ontvangstbevestiging" staat er geen prijs in; jij beslist daarna per aanvraag of en wat er verstuurd wordt.', [
                     'uit' => 'Geen mail naar de klant: ik neem zelf contact op',
                     'ontvangst' => 'Alleen een ontvangstbevestiging (zonder prijs)',

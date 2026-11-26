@@ -100,6 +100,25 @@ final class QuoteTest extends TestCase
         $this->assertNotNull($hidden['dagen']);
     }
 
+    public function testHiddenPriceMessageIsConfigurable(): void
+    {
+        $d = $this->data();
+        $msg = "Je offerte ontvang je binnen 24 uur.\nTot snel!";
+        $hidden = SubmissionBuilder::summary($d, false, $msg);
+        $this->assertTrue($hidden['price_hidden']);
+        $this->assertSame($msg, $hidden['price_message']);
+        $this->assertSame('', SubmissionBuilder::summary($d, true, $msg)['price_message']);
+        $c = Mailer::composeConfirmation($d, 'Afbouw Megens', $msg);
+        $this->assertStringContainsString('binnen 24 uur', $c['body']);
+        $this->assertStringContainsString('Met vriendelijke groet,', $c['body']);
+        $this->assertStringNotContainsString('€', $c['body']);
+        $this->assertStringNotContainsString('binnen 24 uur', Mailer::composeConfirmation($d, 'Afbouw Megens')['body']);
+        $old = Settings::defaults();
+        $this->assertNotSame('', $old['hidden_price_message']);
+        $this->assertSame('Binnen 24 uur.', Settings::sanitize(['hidden_price_message' => '<b>Binnen 24 uur.</b>'], $old)['hidden_price_message']);
+        $this->assertSame($old['hidden_price_message'], Settings::sanitize(['hidden_price_message' => '  '], $old)['hidden_price_message']);
+    }
+
     public function testNewSettings(): void
     {
         $old = Settings::defaults();

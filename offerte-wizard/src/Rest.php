@@ -139,10 +139,12 @@ final class Rest
             $quoted = QuoteSender::send($id, [])[0];
         }
         if ($mode !== 'uit' && !$quoted) {
-            $c = Mailer::composeConfirmation($data, (string) $s['brand_name']);
+            // Staat "prijs tonen" uit, dan krijgt de klant hier dezelfde boodschap als op het eindscherm.
+            $note = (!$showPrice && $data['pricing'] !== null) ? (string) $s['hidden_price_message'] : '';
+            $c = Mailer::composeConfirmation($data, (string) $s['brand_name'], $note);
             wp_mail($data['email'], $c['subject'], $c['body'], ['Content-Type: text/plain; charset=UTF-8']);
         }
-        return new \WP_REST_Response(['ok' => true, 'summary' => SubmissionBuilder::summary($data, $showPrice)]);
+        return new \WP_REST_Response(['ok' => true, 'summary' => SubmissionBuilder::summary($data, $showPrice, (string) $s['hidden_price_message'])]);
     }
 
     /** @return \WP_Error|null */

@@ -718,7 +718,7 @@
         box.appendChild(p);
       });
       if (s.price_hidden) {
-        box.appendChild(el('p', 'muted pricehidden', 'Je prijsindicatie ontvang je van ons zodra we je aanvraag hebben bekeken.'));
+        box.appendChild(el('p', 'muted pricehidden', s.price_message || 'Je prijsindicatie ontvang je van ons zodra we je aanvraag hebben bekeken.'));
       }
     } else {
       box.appendChild(el('p', 'muted', 'We berekenen de m² en de prijs samen met je tijdens ons telefoongesprek.'));

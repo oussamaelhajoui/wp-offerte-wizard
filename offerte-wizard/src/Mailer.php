@@ -95,7 +95,7 @@ final class Mailer
     }
 
     /** Ontvangstbevestiging aan de klant, zonder prijs. @return array{subject:string,body:string} */
-    public static function composeConfirmation(array $d, string $brand): array
+    public static function composeConfirmation(array $d, string $brand, string $priceNote = ''): array
     {
         $L = [
             'Hallo ' . $d['first_name'] . ',',
@@ -105,10 +105,12 @@ final class Mailer
             'Je aanvraag in het kort:',
             '  Periode: ' . self::periodOf($d),
             '  Locatie: ' . $d['address_line'] . ', ' . $d['post_code'] . ' ' . $d['locality'],
-            '',
-            'Met vriendelijke groet,',
-            $brand,
         ];
+        if (trim($priceNote) !== '') {
+            $L[] = '';
+            $L[] = trim($priceNote);
+        }
+        array_push($L, '', 'Met vriendelijke groet,', $brand);
         return ['subject' => self::oneLine('Je offerte-aanvraag bij ' . $brand), 'body' => implode("\n", $L) . "\n"];
     }
 

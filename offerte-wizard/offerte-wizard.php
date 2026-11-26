@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Offerte Wizard
  * Description: Stap-voor-stap offerteaanvraag met prijsindicatie en bouwplan-uitlezing. Plaatsbaar via een shortcode in een column of op een volledige pagina; de stijl is volledig afgeschermd van het thema.
- * Version: 1.5.1
+ * Version: 1.6.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Afbouw Megens
@@ -12,7 +12,7 @@
 
 defined('ABSPATH') || exit;
 
-define('OW_VERSION', '1.5.1');
+define('OW_VERSION', '1.6.0');
 define('OW_FILE', __FILE__);
 define('OW_DIR', plugin_dir_path(__FILE__));
 

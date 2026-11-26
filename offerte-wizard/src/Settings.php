@@ -28,6 +28,8 @@ final class Settings
             'owner_link_send' => 1,
             'owner_link_admin' => 1,
             'quote_intro' => 'Bedankt voor je aanvraag. Hieronder vind je onze offerte.',
+            // Wat de klant op het eindscherm leest (en in de bevestigingsmail) als de prijs niet getoond wordt.
+            'hidden_price_message' => 'Je prijsindicatie ontvang je van ons zodra we je aanvraag hebben bekeken.',
             'price_stuc_wand_min' => 16.0,
             'price_stuc_wand_max' => 22.0,
             'price_stuc_plafond_min' => 14.0,
@@ -73,6 +75,8 @@ final class Settings
         $out['customer_mail'] = in_array($cm, self::CUSTOMER_MAIL, true) ? $cm : $d['customer_mail'];
         $intro = trim(strip_tags(str_replace("\r\n", "\n", (string) ($in['quote_intro'] ?? ''))));
         $out['quote_intro'] = $intro !== '' ? mb_substr($intro, 0, 1000) : $d['quote_intro'];
+        $hm = trim(strip_tags(str_replace("\r\n", "\n", (string) ($in['hidden_price_message'] ?? ''))));
+        $out['hidden_price_message'] = $hm !== '' ? mb_substr($hm, 0, 500) : $d['hidden_price_message'];
 
         $brand = self::line($in['brand_name'] ?? '', 60);
         $out['brand_name'] = $brand !== '' ? $brand : $d['brand_name'];
