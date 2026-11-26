@@ -1,0 +1,6 @@
+{
+    "name": "local/offerte-wizard",
+    "description": "WordPress-plugin: stap-voor-stap offerteaanvraag met bouwplan-uitlezing",
+    "type": "project",
+    "require-dev": { "phpunit/phpunit": "^10.5" }
+}

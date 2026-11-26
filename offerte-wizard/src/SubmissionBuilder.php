@@ -1,0 +1,138 @@
+<?php
+namespace OfferteWizard;
+
+/**
+ * Loopt de antwoorden van de klant opnieuw door de hele flow (de browser is
+ * niet te vertrouwen) en maakt er een schone aanvraag van.
+ */
+final class SubmissionBuilder
+{
+    const MONTHS = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
+
+    /** @return array{errors:array<string,string>,data:array} */
+    public static function build(array $answers, string $today, array $settings): array
+    {
+        $id = 'welkom';
+        $guard = 0;
+        while ($id !== null && $id !== 'overzicht' && $guard++ < 30) {
+            $err = Flow::validate($id, $answers, $today);
+            if ($err !== null) {
+                return ['errors' => [$id => $err], 'data' => []];
+            }
+            $id = Flow::next($id, $answers);
+        }
+
+        $m2 = (string) $answers['m2'];
+        $wand = NumberParser::parse(self::scalar($answers['m2_wand'] ?? ''));
+        $plafond = NumberParser::parse(self::scalar($answers['m2_plafond'] ?? ''));
+        if ($m2 === 'nee') {
+            $wand = $plafond = null;
+        }
+        $schilderen = (string) $answers['schilderen'] === 'ja';
+        $pricing = ($wand !== null || $plafond !== null)
+            ? Pricing::compute((float) $wand, (float) $plafond, $schilderen, $settings)
+            : null;
+
+        $token = self::scalar($answers['plan_token'] ?? '');
+        $data = [
+            'type_woning' => (string) $answers['type_woning'],
+            'm2_keuze' => $m2,
+            'wand' => $wand,
+            'plafond' => $plafond,
+            'daktype' => $m2 === 'nee' ? '' : (string) ($answers['daktype'] ?? ''),
+            'ondergrond' => $m2 === 'nee' ? array_values(array_intersect((array) $answers['ondergrond'], Flow::ONDERGROND)) : [],
+            'schilderen' => $schilderen,
+            'start' => (string) $answers['periode_start'],
+            'eind' => (string) $answers['periode_eind'],
+            'first_name' => self::line($answers['first_name'], 60),
+            'last_name' => self::line($answers['last_name'], 80),
+            'email' => trim((string) $answers['email']),
+            'phone_number' => self::line($answers['phone_number'], 30),
+            'address_line' => self::line($answers['address_line'], 120),
+            'locality' => self::line($answers['locality'], 80),
+            'post_code' => strtoupper(self::line($answers['post_code'], 10)),
+            'beschrijving' => self::text($answers['beschrijving'] ?? '', 2000),
+            'plan_token' => ($m2 === 'bouwplan' && preg_match('/^[a-f0-9]{32}$/', $token)) ? $token : '',
+            'rooms' => $m2 === 'bouwplan' ? self::rooms($answers['rooms'] ?? []) : [],
+            'pricing' => $pricing,
+        ];
+        return ['errors' => [], 'data' => $data];
+    }
+
+    /** Wat de klant na het versturen te zien krijgt. */
+    public static function summary(array $d, bool $showPrice = true): array
+    {
+        $p = $d['pricing'];
+        $hidden = !$showPrice && $p !== null;
+        if (!$showPrice) {
+            $p = null;
+        }
+        $werk = $d['schilderen'] ? 'Stucwerk en Schilderwerk' : 'Stucwerk';
+        $total = ($d['wand'] ?? 0) + ($d['plafond'] ?? 0);
+        return [
+            'periode' => self::periodLabel($d['start'], $d['eind']),
+            'type' => $d['type_woning'] === 'nieuwbouw' ? 'Nieuwbouw' : 'Renovatie',
+            'werk' => $werk,
+            'wand' => $d['wand'],
+            'plafond' => $d['plafond'],
+            'totaal' => $total > 0 ? $total : null,
+            'stucwerk' => $p['stucwerk'] ?? null,
+            'schilderwerk' => $p['schilderwerk'] ?? null,
+            'dagen' => $d['pricing']['dagen'] ?? null,
+            'price_hidden' => $hidden,
+            'plaats' => $d['locality'],
+        ];
+    }
+
+    public static function periodLabel(string $start, string $end): string
+    {
+        [$sy, $sm, $sd] = array_map('intval', explode('-', $start));
+        [$ey, $em, $ed] = array_map('intval', explode('-', $end));
+        $sMonth = self::MONTHS[$sm - 1];
+        $eMonth = self::MONTHS[$em - 1];
+        if ($sd === $ed && $sm === $em && $sy === $ey) {
+            return $sd . ' ' . $sMonth;
+        }
+        if ($sm === $em && $sy === $ey) {
+            return $sd . ' - ' . $ed . ' ' . $sMonth;
+        }
+        return $sd . ' ' . $sMonth . ' - ' . $ed . ' ' . $eMonth;
+    }
+
+    private static function rooms($raw): array
+    {
+        if (!is_array($raw)) {
+            return [];
+        }
+        $out = [];
+        foreach (array_slice($raw, 0, 50) as $r) {
+            if (!is_array($r)) {
+                continue;
+            }
+            $floor = NumberParser::parse(self::scalar($r['floor_m2'] ?? ''));
+            $wall = NumberParser::parse(self::scalar($r['wall_m2'] ?? ''));
+            if ($floor === null && $wall === null) {
+                continue;
+            }
+            $out[] = ['name' => self::line($r['name'] ?? '', 60), 'floor_m2' => $floor, 'wall_m2' => $wall];
+        }
+        return $out;
+    }
+
+    private static function scalar($v): string
+    {
+        return is_scalar($v) ? (string) $v : '';
+    }
+
+    private static function line($v, int $max): string
+    {
+        $s = trim(preg_replace('/\s+/', ' ', strip_tags(self::scalar($v))));
+        return mb_substr($s, 0, $max);
+    }
+
+    private static function text($v, int $max): string
+    {
+        $s = trim(strip_tags(str_replace("\r\n", "\n", self::scalar($v))));
+        return mb_substr($s, 0, $max);
+    }
+}
