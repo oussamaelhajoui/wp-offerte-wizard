@@ -7,8 +7,8 @@ final class Settings
     const MODES = ['auto', 'ai', 'tekst', 'handmatig'];
     const DEFAULT_UPDATE_URL = 'https://github.com/oussamaelhajoui/wp-offerte-wizard/releases/latest/download/offerte-wizard.json';
     const PROVIDERS = ['claude', 'openai'];
-    /** uit = geen mail naar de klant; ontvangst = bevestiging zonder prijs; direct = meteen de offerte met prijsindicatie */
-    const CUSTOMER_MAIL = ['uit', 'ontvangst', 'direct'];
+    /** uit = geen mail naar de klant; aan = ontvangstbevestiging (met of zonder prijs, zie mail_price) */
+    const CUSTOMER_MAIL = ['uit', 'aan'];
     const PRICE_KEYS = [
         'price_stuc_wand_min', 'price_stuc_wand_max',
         'price_stuc_plafond_min', 'price_stuc_plafond_max',
@@ -21,16 +21,20 @@ final class Settings
         return [
             'recipient' => '',
             'brand_name' => 'Afbouw Megens',
-            // Wat de klant te zien/ontvangen krijgt na het versturen.
-            // Standaard geen prijs op het overzicht: jij beslist per aanvraag of en wat de klant krijgt.
+            // 1. Eindscherm: de prijsrange tonen (met toelichting en eigen extra tekst) of alleen een contact-bericht.
+            //    Standaard geen prijs: jij beslist per aanvraag of en wat de klant krijgt.
             'show_price' => 0,
-            'customer_mail' => 'ontvangst',
+            'price_disclaimer' => 'Dit is een richtprijs op basis van de ingevulde informatie, inclusief arbeid en materiaal, zodat je achteraf niet voor verrassingen komt te staan. We nemen contact met je op voor de definitieve offerte.',
+            'shown_price_extra' => '',
+            'hidden_price_title' => 'Bedankt, we nemen contact met je op',
+            'hidden_price_message' => 'We bekijken je aanvraag persoonlijk en nemen zo snel mogelijk contact met je op om je klus en de prijs door te nemen.',
+            // 2. Mail naar de klant: wel of niet, en met of zonder prijs erin.
+            'customer_mail' => 'aan',
+            'mail_price' => 0,
+            'quote_intro' => 'Bedankt voor je aanvraag. Hieronder vind je onze offerte.',
+            // 3. Knoppen in de mail aan de eigenaar.
             'owner_link_send' => 1,
             'owner_link_admin' => 1,
-            'quote_intro' => 'Bedankt voor je aanvraag. Hieronder vind je onze offerte.',
-            // Wat de klant op het eindscherm leest (en in de bevestigingsmail) als de prijs niet getoond wordt.
-            'hidden_price_title' => 'Je prijsindicatie is onderweg',
-            'hidden_price_message' => 'We bekijken je aanvraag persoonlijk en laten je zo snel mogelijk weten wat de klus kost. Je hoort van ons.',
             'price_stuc_wand_min' => 16.0,
             'price_stuc_wand_max' => 22.0,
             'price_stuc_plafond_min' => 14.0,
@@ -60,13 +64,31 @@ final class Settings
         return self::migrate(array_merge(self::defaults(), is_array($saved) ? $saved : []));
     }
 
-    /** De eerste standaardtekst (1.6.0) is vervangen door een betere; wie hem nooit aanpaste krijgt de nieuwe. */
-    const LEGACY_HIDDEN_MESSAGE = 'Je prijsindicatie ontvang je van ons zodra we je aanvraag hebben bekeken.';
+    /** Eerdere standaardteksten (1.6.0, 1.6.1): wie ze nooit aanpaste krijgt de nieuwe standaard. */
+    const LEGACY_HIDDEN_MESSAGES = [
+        'Je prijsindicatie ontvang je van ons zodra we je aanvraag hebben bekeken.',
+        'We bekijken je aanvraag persoonlijk en laten je zo snel mogelijk weten wat de klus kost. Je hoort van ons.',
+    ];
+    const LEGACY_HIDDEN_TITLE = 'Je prijsindicatie is onderweg';
+    /** @deprecated alias voor tests/oude code */
+    const LEGACY_HIDDEN_MESSAGE = self::LEGACY_HIDDEN_MESSAGES[0];
 
     public static function migrate(array $s): array
     {
-        if (($s['hidden_price_message'] ?? '') === self::LEGACY_HIDDEN_MESSAGE) {
-            $s['hidden_price_message'] = self::defaults()['hidden_price_message'];
+        $d = self::defaults();
+        if (in_array($s['hidden_price_message'] ?? '', self::LEGACY_HIDDEN_MESSAGES, true)) {
+            $s['hidden_price_message'] = $d['hidden_price_message'];
+        }
+        if (($s['hidden_price_title'] ?? '') === self::LEGACY_HIDDEN_TITLE) {
+            $s['hidden_price_title'] = $d['hidden_price_title'];
+        }
+        // 1.2-1.6: "ontvangst" (zonder prijs) en "direct" (met prijs) waren één keuzelijst.
+        $cm = $s['customer_mail'] ?? 'aan';
+        if ($cm === 'direct') {
+            $s['mail_price'] = 1;
+        }
+        if ($cm === 'ontvangst' || $cm === 'direct') {
+            $s['customer_mail'] = 'aan';
         }
         return $s;
     }
@@ -83,8 +105,14 @@ final class Settings
         $out['show_price'] = empty($in['show_price']) ? 0 : 1;
         $out['owner_link_send'] = empty($in['owner_link_send']) ? 0 : 1;
         $out['owner_link_admin'] = empty($in['owner_link_admin']) ? 0 : 1;
+        $in = self::migrate($in + ['customer_mail' => $d['customer_mail']]);
         $cm = (string) ($in['customer_mail'] ?? '');
         $out['customer_mail'] = in_array($cm, self::CUSTOMER_MAIL, true) ? $cm : $d['customer_mail'];
+        $out['mail_price'] = empty($in['mail_price']) ? 0 : 1;
+        $pd = trim(strip_tags(str_replace("\r\n", "\n", (string) ($in['price_disclaimer'] ?? ''))));
+        $out['price_disclaimer'] = $pd !== '' ? mb_substr($pd, 0, 600) : $d['price_disclaimer'];
+        // Extra tekst bij de prijs is optioneel: leeg mag.
+        $out['shown_price_extra'] = mb_substr(trim(strip_tags(str_replace("\r\n", "\n", (string) ($in['shown_price_extra'] ?? '')))), 0, 500);
         $intro = trim(strip_tags(str_replace("\r\n", "\n", (string) ($in['quote_intro'] ?? ''))));
         $out['quote_intro'] = $intro !== '' ? mb_substr($intro, 0, 1000) : $d['quote_intro'];
         $hm = trim(strip_tags(str_replace("\r\n", "\n", (string) ($in['hidden_price_message'] ?? ''))));

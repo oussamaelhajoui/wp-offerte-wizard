@@ -133,14 +133,73 @@ final class QuoteTest extends TestCase
     public function testNewSettings(): void
     {
         $old = Settings::defaults();
-        $s = Settings::sanitize(['customer_mail' => 'direct', 'show_price' => '1', 'quote_intro' => '<i>Hallo</i> daar'], $old);
-        $this->assertSame('direct', $s['customer_mail']);
+        $s = Settings::sanitize(['customer_mail' => 'aan', 'mail_price' => '1', 'show_price' => '1', 'quote_intro' => '<i>Hallo</i> daar'], $old);
+        $this->assertSame('aan', $s['customer_mail']);
+        $this->assertSame(1, $s['mail_price']);
         $this->assertSame(1, $s['show_price']);
         $this->assertSame(0, $s['owner_link_send']);
         $this->assertSame('Hallo daar', $s['quote_intro']);
-        $this->assertSame('ontvangst', Settings::sanitize(['customer_mail' => 'raar'], $old)['customer_mail']);
+        $this->assertSame('aan', Settings::sanitize(['customer_mail' => 'raar'], $old)['customer_mail']);
+        $this->assertSame('uit', Settings::sanitize(['customer_mail' => 'uit'], $old)['customer_mail']);
         $this->assertSame(0, Settings::defaults()['show_price']);
+        $this->assertSame(0, Settings::defaults()['mail_price']);
         $this->assertSame(0, Settings::sanitize([], $old)['show_price']);
         $this->assertSame($old['quote_intro'], Settings::sanitize(['quote_intro' => ''], $old)['quote_intro']);
+    }
+
+    public function testMailPriceIsIndependentOfScreenAndMigratesOldChoices(): void
+    {
+        $old = Settings::defaults();
+        // Prijs op het scherm verbergen maar wel mailen, en andersom.
+        $a = Settings::sanitize(['show_price' => '0', 'customer_mail' => 'aan', 'mail_price' => '1'], $old);
+        $this->assertSame([0, 'aan', 1], [$a['show_price'], $a['customer_mail'], $a['mail_price']]);
+        $b = Settings::sanitize(['show_price' => '1', 'customer_mail' => 'aan', 'mail_price' => '0'], $old);
+        $this->assertSame([1, 'aan', 0], [$b['show_price'], $b['customer_mail'], $b['mail_price']]);
+        // Oude keuzelijst (1.2-1.6): "direct" = met prijs, "ontvangst" = zonder, bij opgeslagen instellingen...
+        $m1 = Settings::migrate(array_merge($old, ['customer_mail' => 'direct', 'mail_price' => 0]));
+        $this->assertSame(['aan', 1], [$m1['customer_mail'], $m1['mail_price']]);
+        $m2 = Settings::migrate(array_merge($old, ['customer_mail' => 'ontvangst']));
+        $this->assertSame(['aan', 0], [$m2['customer_mail'], $m2['mail_price']]);
+        $m3 = Settings::migrate(array_merge($old, ['customer_mail' => 'uit']));
+        $this->assertSame('uit', $m3['customer_mail']);
+        // ... en bij formulierinvoer van een oude keuze.
+        $fromForm = Settings::sanitize(['customer_mail' => 'direct'], $old);
+        $this->assertSame(['aan', 1], [$fromForm['customer_mail'], $fromForm['mail_price']]);
+    }
+
+    public function testPriceTextsOnScreenAndInQuoteMail(): void
+    {
+        $d = $this->data();
+        $notice = ['disclaimer' => 'Richtprijs, inclusief materiaal.', 'extra' => "Deze maand geen voorrijkosten.\nTot snel!", 'title' => 'x', 'message' => 'y'];
+        $shown = SubmissionBuilder::summary($d, true, $notice);
+        $this->assertSame($notice['disclaimer'], $shown['price_disclaimer']);
+        $this->assertSame($notice['extra'], $shown['price_extra']);
+        $this->assertNull($shown['price_notice']);
+        $hidden = SubmissionBuilder::summary($d, false, $notice);
+        $this->assertSame('', $hidden['price_disclaimer']);
+        $this->assertSame('', $hidden['price_extra']);
+        $this->assertNotNull($hidden['price_notice']);
+        $prices = QuotePrices::resolve($d['pricing'], []);
+        $with = Mailer::composeQuote($d, $prices, 'Afbouw Megens', 'Hallo!', 'Richtprijs, inclusief materiaal.');
+        $this->assertStringContainsString('Richtprijs, inclusief materiaal.', $with['body']);
+        $this->assertStringNotContainsString('Richtprijs', Mailer::composeQuote($d, $prices, 'Afbouw Megens', 'Hallo!')['body']);
+        $old = Settings::defaults();
+        $s = Settings::sanitize(['price_disclaimer' => '<b>Eigen toelichting</b>', 'shown_price_extra' => '<i>Extra</i> tekst'], $old);
+        $this->assertSame('Eigen toelichting', $s['price_disclaimer']);
+        $this->assertSame('Extra tekst', $s['shown_price_extra']);
+        $this->assertSame($old['price_disclaimer'], Settings::sanitize(['price_disclaimer' => ' '], $old)['price_disclaimer']);
+        $this->assertSame('', Settings::sanitize(['shown_price_extra' => ''], array_merge($old, ['shown_price_extra' => 'oud']))['shown_price_extra']);
+        $this->assertSame('', $old['shown_price_extra']);
+    }
+
+    public function testLegacyDefaultTextsAreReplaced(): void
+    {
+        $d = Settings::defaults();
+        foreach (Settings::LEGACY_HIDDEN_MESSAGES as $legacy) {
+            $this->assertSame($d['hidden_price_message'], Settings::migrate(array_merge($d, ['hidden_price_message' => $legacy]))['hidden_price_message']);
+        }
+        $this->assertSame($d['hidden_price_title'], Settings::migrate(array_merge($d, ['hidden_price_title' => Settings::LEGACY_HIDDEN_TITLE]))['hidden_price_title']);
+        $this->assertStringContainsString('contact met je op', $d['hidden_price_message']);
+        $this->assertStringContainsString('contact met je op', $d['hidden_price_title']);
     }
 }

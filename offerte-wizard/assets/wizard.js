@@ -715,9 +715,18 @@
         var p = el('div', 'price');
         p.appendChild(el('span', 'tlabel', x[0]));
         p.appendChild(el('strong', null, 'Prijsindicatie is tussen ' + euro(x[1].min) + ' en ' + euro(x[1].max) + ' (inclusief arbeid, materiaal & BTW).'));
-        p.appendChild(el('span', 'muted small', 'Dit is een richtprijs op basis van de ingevulde informatie. We nemen contact met je op voor de definitieve offerte.'));
+        if (s.price_disclaimer) { p.appendChild(el('span', 'muted small pricehidden', s.price_disclaimer)); }
         box.appendChild(p);
       });
+      if (s.price_extra) {
+        // Eigen extra tekst bij de prijs (instelbaar in wp-admin).
+        var xc = el('div', 'pricenotice');
+        var xi = el('span', 'ic'); xi.appendChild(icon('check'));
+        var xt = el('div', 'tx');
+        xt.appendChild(el('span', 'pricehidden', s.price_extra));
+        xc.appendChild(xi); xc.appendChild(xt);
+        box.appendChild(xc);
+      }
       if (s.price_hidden && s.price_notice) {
         // Opvallend bericht in plaats van de prijs (tekst instelbaar in wp-admin).
         var card = el('div', 'pricenotice');

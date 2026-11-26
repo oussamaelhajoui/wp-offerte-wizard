@@ -132,19 +132,25 @@ final class Rest
         if (!$sent) {
             error_log('[offerte-wizard] Mail naar ontvanger kon niet worden verzonden; aanvraag is wel bewaard.');
         }
-        // Wat de klant per mail krijgt: niets, een ontvangstbevestiging (zonder prijs) of meteen de offerte.
-        $mode = (string) $s['customer_mail'];
+        // Mail naar de klant: uit, of een bevestiging; daarin staat de prijs alleen als "mail_price" aan staat
+        // (los van wat het eindscherm toont) en er een prijs berekend is.
         $quoted = false;
-        if ($mode === 'direct' && $id && $hasPrice) {
+        if ($s['customer_mail'] === 'aan' && !empty($s['mail_price']) && $id && $hasPrice) {
             $quoted = QuoteSender::send($id, [])[0];
         }
-        if ($mode !== 'uit' && !$quoted) {
-            // Staat "prijs tonen" uit, dan krijgt de klant hier dezelfde boodschap als op het eindscherm.
+        if ($s['customer_mail'] === 'aan' && !$quoted) {
+            // Toont het eindscherm geen prijs, dan krijgt de klant hier dezelfde boodschap.
             $note = (!$showPrice && $data['pricing'] !== null) ? $s['hidden_price_title'] . "\n" . $s['hidden_price_message'] : '';
             $c = Mailer::composeConfirmation($data, (string) $s['brand_name'], $note);
             wp_mail($data['email'], $c['subject'], $c['body'], ['Content-Type: text/plain; charset=UTF-8']);
         }
-        return new \WP_REST_Response(['ok' => true, 'summary' => SubmissionBuilder::summary($data, $showPrice, ['title' => (string) $s['hidden_price_title'], 'message' => (string) $s['hidden_price_message']])]);
+        $notice = [
+            'title' => (string) $s['hidden_price_title'],
+            'message' => (string) $s['hidden_price_message'],
+            'disclaimer' => (string) $s['price_disclaimer'],
+            'extra' => (string) $s['shown_price_extra'],
+        ];
+        return new \WP_REST_Response(['ok' => true, 'summary' => SubmissionBuilder::summary($data, $showPrice, $notice)]);
     }
 
     /** @return \WP_Error|null */

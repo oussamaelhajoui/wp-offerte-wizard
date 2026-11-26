@@ -19,7 +19,14 @@ final class QuoteSender
             return [false, 'Er is geen prijs bekend voor deze aanvraag. Vul een eigen prijs in.'];
         }
         $s = Settings::get();
-        $mail = Mailer::composeQuote($data, $prices, (string) $s['brand_name'], (string) $s['quote_intro']);
+        // De richtprijs-toelichting hoort bij de berekende indicatie, niet bij een prijs die jij zelf invulde.
+        $ownPrice = false;
+        foreach (['st_min', 'st_max', 'sc_min', 'sc_max'] as $k) {
+            if (isset($custom[$k]) && is_scalar($custom[$k]) && trim((string) $custom[$k]) !== '') {
+                $ownPrice = true;
+            }
+        }
+        $mail = Mailer::composeQuote($data, $prices, (string) $s['brand_name'], (string) $s['quote_intro'], $ownPrice ? '' : (string) $s['price_disclaimer']);
         $owner = $s['recipient'] !== '' ? $s['recipient'] : (string) get_option('admin_email');
         $headers = ['Content-Type: text/plain; charset=UTF-8', 'Reply-To: ' . $owner];
         if (!wp_mail($data['email'], $mail['subject'], $mail['body'], $headers)) {

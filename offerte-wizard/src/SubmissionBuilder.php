@@ -72,7 +72,10 @@ final class SubmissionBuilder
     }
 
     /** Wat de klant na het versturen te zien krijgt. */
-    /** @param array{title?:string,message?:string} $notice het bericht dat de klant leest als de prijs niet getoond wordt */
+    /**
+     * @param array{title?:string,message?:string,disclaimer?:string,extra?:string} $notice teksten voor het eindscherm:
+     *        title/message als de prijs niet getoond wordt; disclaimer/extra als de prijs wel getoond wordt
+     */
     public static function summary(array $d, bool $showPrice = true, array $notice = []): array
     {
         $p = $d['pricing'];
@@ -95,6 +98,8 @@ final class SubmissionBuilder
             'dagen' => $d['pricing']['dagen'] ?? null,
             'price_hidden' => $hidden,
             'price_notice' => $hidden ? ['title' => (string) ($notice['title'] ?? ''), 'message' => (string) ($notice['message'] ?? '')] : null,
+            'price_disclaimer' => ($showPrice && $d['pricing'] !== null) ? (string) ($notice['disclaimer'] ?? '') : '',
+            'price_extra' => ($showPrice && $d['pricing'] !== null) ? (string) ($notice['extra'] ?? '') : '',
             'plaats' => $d['locality'],
         ];
     }

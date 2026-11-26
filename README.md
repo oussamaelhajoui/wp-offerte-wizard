@@ -21,9 +21,13 @@ WordPress-plugin: stap-voor-stap offerteaanvraag (flow nagebouwd van stukadoorsc
 Instellingen → Offerte Wizard:
 
 - **Prijzen per m²:** zes velden (stucwerk wanden, stucwerk plafonds en schilderwerk, elk van/tot).
-- **Prijs tonen aan de klant:** aan = de klant ziet de indicatie op het overzicht; uit = alleen "aanvraag ontvangen" (jij krijgt de berekende prijs wel in je mail).
-- **Mail naar de klant:** geen mail (jij neemt zelf contact op) / alleen een ontvangstbevestiging zonder prijs / meteen de offerte met de berekende indicatie.
-- **Knoppen in jouw mail:** "Offerte sturen naar klant" (één klik plus een bevestigingspagina, met de berekende prijs) en "Aanvraag openen" (wp-admin). Elk aan of uit te zetten.
+Drie onafhankelijke keuzes:
+
+1. **Eindscherm:** toon de prijsrange (met een instelbare toelichting en eventueel een eigen extra tekst in een opvallende kaart), of toon geen prijs maar een bericht dat we contact opnemen (titel en tekst instelbaar).
+2. **Mail naar de klant:** geen mail, of een ontvangstbevestiging. Los daarvan kies je of de prijs in die mail staat: met prijs krijgt de klant meteen de offerte (en staat de aanvraag als "verstuurd" bij jou). Je kunt de prijs dus op het scherm verbergen en toch mailen, of andersom.
+3. **Knoppen in jouw mail:** "Offerte sturen naar klant" (één klik plus een bevestigingspagina, met de berekende prijs) en "Aanvraag openen" (wp-admin). Elk aan of uit te zetten.
+
+Jij krijgt de berekende prijs altijd in je eigen mail.
 
 Per aanvraag, onder Offerte-aanvragen in wp-admin: eigen prijs invullen (één bedrag = vaste prijs, twee = van/tot) met persoonlijke toelichting en versturen, opnieuw versturen, of markeren als zelf afgehandeld. Doe je niets, dan gaat er niets naar de klant. De status (nieuw, verstuurd, afgehandeld) staat in de lijst.
 

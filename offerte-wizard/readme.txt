@@ -1,7 +1,7 @@
 === Offerte Wizard ===
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.6.2
+Stable tag: 1.7.0
 License: GPLv2 or later
 
 Stap-voor-stap offerteaanvraag met prijsindicatie en bouwplan-uitlezing.
@@ -24,6 +24,8 @@ Instellingen > Offerte Wizard > "Na het versturen": kies of de klant de prijs zi
 Per aanvraag (menu Offerte-aanvragen): eigen prijs invullen en versturen, of markeren als zelf afgehandeld.
 
 == Changelog ==
+= 1.7.0 =
+Eindscherm instelbaar: prijsrange (met eigen toelichting en extra tekst) of een bericht dat we contact opnemen (nieuwe, betere standaardtekst). Mail naar de klant: aan/uit, en los daarvan met of zonder prijs.
 = 1.6.2 =
 Teksten: geen verwijzing meer naar een telefoongesprek; in plaats daarvan "we nemen contact met je op".
 = 1.6.1 =

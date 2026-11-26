@@ -56,21 +56,30 @@ final class Admin
                 ['recipient', 'E-mailadres voor nieuwe aanvragen', 'email', 'Leeg = het beheerders-e-mailadres van de site.'],
                 ['brand_name', 'Bedrijfsnaam (in mails aan de klant)', 'text', ''],
             ],
-            'Na het versturen: wat krijgt de klant?' => [
-                ['show_price', 'Prijsindicatie op het eindscherm', 'select', 'Jij krijgt de berekende prijs altijd in je eigen mail.', [
-                    '1' => 'Toon de prijsindicatie aan de klant',
-                    '0' => 'Toon geen prijs, maar een bericht (hieronder in te stellen)',
+            '1. Eindscherm: wat ziet de klant na het versturen?' => [
+                ['show_price', 'Eindscherm', 'select', 'Jij krijgt de berekende prijs altijd in je eigen mail, welke keuze je ook maakt.', [
+                    '1' => 'Toon de prijsrange (met toelichting en eventueel een eigen tekst)',
+                    '0' => 'Toon geen prijs, maar een bericht dat we contact opnemen',
                 ]],
-                ['hidden_price_title', 'Titel van het bericht', 'text', 'Alleen zichtbaar als je hierboven kiest voor "geen prijs, wel een bericht".'],
-                ['hidden_price_message', 'Tekst van het bericht', 'textarea', 'Staat in een opvallende kaart op het eindscherm, in plaats van de prijs, en onderaan de ontvangstbevestiging (als die aan staat).'],
-                ['customer_mail', 'Mail naar de klant', 'select', 'Bij "ontvangstbevestiging" staat er geen prijs in; jij beslist daarna per aanvraag of en wat er verstuurd wordt.', [
+                ['price_disclaimer', 'Toelichting bij de prijsrange', 'textarea', 'Staat onder de prijs. Alleen zichtbaar als je de prijsrange toont (en onderaan de offertemail met de berekende prijs).'],
+                ['shown_price_extra', 'Eigen extra tekst bij de prijs (optioneel)', 'textarea', 'Verschijnt in een opvallende kaart onder de prijs. Leeg = niet tonen. Bijvoorbeeld een actie of een opmerking over steigerwerk.'],
+                ['hidden_price_title', 'Titel van het bericht (zonder prijs)', 'text', 'Alleen zichtbaar als je kiest voor "geen prijs, wel een bericht".'],
+                ['hidden_price_message', 'Tekst van het bericht (zonder prijs)', 'textarea', 'Staat in een opvallende kaart in plaats van de prijs, en onderaan de ontvangstbevestiging (als die aan staat en geen prijs bevat).'],
+            ],
+            '2. Mail naar de klant' => [
+                ['customer_mail', 'Mail naar de klant', 'select', '', [
                     'uit' => 'Geen mail naar de klant: ik neem zelf contact op',
-                    'ontvangst' => 'Alleen een ontvangstbevestiging (zonder prijs)',
-                    'direct' => 'Meteen de offerte met de berekende prijsindicatie',
+                    'aan' => 'Stuur de klant een ontvangstbevestiging',
                 ]],
-                ['quote_intro', 'Openingstekst in de offertemail', 'textarea', 'Staat bovenaan de mail als je een offerte naar de klant stuurt.'],
-                ['owner_link_send', 'Knop "Offerte sturen naar klant" in de mail aan mij', 'checkbox', 'Eén klik (met een bevestigingspagina) en de klant krijgt de offerte met de berekende prijsindicatie.'],
-                ['owner_link_admin', 'Knop "Aanvraag openen" in de mail aan mij', 'checkbox', 'Opent de aanvraag in wp-admin: daar vul je een eigen prijs in en verstuur je, of markeer je hem als zelf afgehandeld.'],
+                ['mail_price', 'Prijs in die mail', 'select', 'Los van het eindscherm: je kunt de prijs op het scherm verbergen maar wel mailen, of andersom. Met prijs krijgt de klant meteen de offerte en staat de aanvraag als "verstuurd" bij je. Is er geen prijs berekend, dan krijgt de klant de bevestiging zonder prijs.', [
+                    '0' => 'Zonder prijsindicatie (jij beslist later per aanvraag)',
+                    '1' => 'Met de berekende prijsindicatie',
+                ]],
+                ['quote_intro', 'Openingstekst als de mail een prijs bevat', 'textarea', 'Staat bovenaan de mail als de klant de offerte krijgt, ook als jij later een offerte stuurt.'],
+            ],
+            '3. Knoppen in de mail aan jou' => [
+                ['owner_link_send', 'Knop "Offerte sturen naar klant"', 'checkbox', 'Eén klik (met een bevestigingspagina) en de klant krijgt de offerte met de berekende prijsindicatie.'],
+                ['owner_link_admin', 'Knop "Aanvraag openen"', 'checkbox', 'Opent de aanvraag in wp-admin: daar vul je een eigen prijs in en verstuur je, of markeer je hem als zelf afgehandeld.'],
             ],
             'Bouwplan uitlezen' => [
                 ['mode', 'Standaardmodus', 'select', 'Per snippet te overschrijven met mode="ai|tekst|handmatig".', [

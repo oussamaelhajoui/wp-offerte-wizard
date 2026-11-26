@@ -119,7 +119,7 @@ final class Mailer
      * @param array{stucwerk:?array,schilderwerk:?array,note:string} $prices uitkomst van QuotePrices::resolve
      * @return array{subject:string,body:string}
      */
-    public static function composeQuote(array $d, array $prices, string $brand, string $intro): array
+    public static function composeQuote(array $d, array $prices, string $brand, string $intro, string $disclaimer = ''): array
     {
         $L = ['Hallo ' . $d['first_name'] . ',', '', trim($intro), '', 'Je offerte (inclusief arbeid, materiaal en BTW):'];
         if ($prices['stucwerk']) {
@@ -127,6 +127,10 @@ final class Mailer
         }
         if ($prices['schilderwerk']) {
             $L[] = '  Schilderwerk: ' . self::range($prices['schilderwerk']);
+        }
+        if (trim($disclaimer) !== '') {
+            $L[] = '';
+            $L[] = trim($disclaimer);
         }
         if ($prices['note'] !== '') {
             $L[] = '';
