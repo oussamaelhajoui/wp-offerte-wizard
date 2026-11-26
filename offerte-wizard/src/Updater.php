@@ -12,7 +12,11 @@ final class Updater
 
     public static function register(): void
     {
-        add_filter('pre_set_site_transient_update_plugins', [self::class, 'inject']);
+        // Bij elke WordPress-controle (max. 1x per 12 uur) ververst de plugin het update-bestand...
+        add_filter('pre_set_site_transient_update_plugins', [self::class, 'injectFresh']);
+        // ...en in wp-admin wordt de nieuwste release (max. 1 uur oud) ook bij het uitlezen meegenomen,
+        // zodat een nieuwe versie niet tot 12 uur op zich laat wachten.
+        add_filter('site_transient_update_plugins', [self::class, 'injectOnRead']);
         add_filter('plugins_api', [self::class, 'details'], 10, 3);
         add_filter('upgrader_pre_download', [self::class, 'verifiedDownload'], 10, 3);
         add_action('admin_post_ow_check_update', [self::class, 'checkNow']);
@@ -40,17 +44,29 @@ final class Updater
         $info = (!is_wp_error($r) && (int) wp_remote_retrieve_response_code($r) === 200)
             ? UpdateInfo::parse((string) wp_remote_retrieve_body($r))
             : null;
-        set_transient(self::TRANSIENT, ['url' => $url, 'info' => $info], $info ? 12 * HOUR_IN_SECONDS : HOUR_IN_SECONDS);
+        set_transient(self::TRANSIENT, ['url' => $url, 'info' => $info], $info ? HOUR_IN_SECONDS : 15 * MINUTE_IN_SECONDS);
         return $info;
     }
 
     /** @param mixed $transient */
-    public static function inject($transient)
+    public static function injectFresh($transient)
+    {
+        return self::inject($transient, true);
+    }
+
+    /** @param mixed $transient */
+    public static function injectOnRead($transient)
+    {
+        return is_admin() ? self::inject($transient) : $transient;
+    }
+
+    /** @param mixed $transient */
+    public static function inject($transient, bool $force = false)
     {
         if (!is_object($transient)) {
             return $transient;
         }
-        $info = self::remote();
+        $info = self::remote($force);
         if ($info === null) {
             return $transient;
         }
@@ -64,10 +80,17 @@ final class Updater
             'requires_php' => '7.4',
             'icons' => [],
         ];
+        $key = self::basename();
         if (UpdateInfo::isNewer(OW_VERSION, $info)) {
-            $transient->response[self::basename()] = $item;
+            if (isset($transient->no_update) && is_array($transient->no_update)) {
+                unset($transient->no_update[$key]);
+            }
+            $transient->response[$key] = $item;
         } else {
-            $transient->no_update[self::basename()] = $item;
+            if (isset($transient->response) && is_array($transient->response)) {
+                unset($transient->response[$key]);
+            }
+            $transient->no_update[$key] = $item;
         }
         return $transient;
     }

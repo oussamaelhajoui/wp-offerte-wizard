@@ -40,6 +40,16 @@ Invoke-Expression "$wp option patch update ow_settings update_url http://updates
 
 "--- 1. na installatie (verwacht: versie $($cur.Groups[0].Value -replace '.*:\s*','') met update naar $next)"
 Invoke-Expression "$wp plugin list --name=offerte-wizard --fields=name,status,version,update,update_version"
+"--- 1b. VEROUDERDE CACHE: server biedt ineens $next-nieuwer aan, WordPress' eigen update-cache (12 uur) kent dat nog niet"
+$newer = "$($cur.Groups[1].Value).$($cur.Groups[2].Value).$([int]$cur.Groups[3].Value + 5)"
+$j2 = [ordered]@{ version = $newer; download_url = 'http://updates.test/offerte-wizard.zip'; sha256 = $sha; changelog = 'later' } | ConvertTo-Json
+[IO.File]::WriteAllText("$t\updates\offerte-wizard.json", $j2, (New-Object Text.UTF8Encoding $false))
+[IO.File]::WriteAllText("$t\zips\stale.php", "<?php`nrequire_once ABSPATH . 'wp-admin/includes/plugin.php';`ndelete_transient('ow_update_info'); // onze eigen cache is verlopen (1 uur)`n`$stored = get_site_transient('update_plugins');`necho 'opgeslagen in WordPress: ' . (`$stored->response['offerte-wizard/offerte-wizard.php']->new_version ?? 'geen') . `"``n`";`nset_current_screen('plugins');`n`$read = get_site_transient('update_plugins');`necho 'zichtbaar op Plugins-pagina: ' . (`$read->response['offerte-wizard/offerte-wizard.php']->new_version ?? 'geen') . `"``n`";`n", (New-Object Text.UTF8Encoding $false))
+Invoke-Expression "$wp eval-file /zips/stale.php"
+"(verwacht: opgeslagen = $next, zichtbaar = $newer)"
+Write-Json $sha
+Invoke-Expression "$wp transient delete ow_update_info" | Out-Null
+Invoke-Expression "$wp transient delete update_plugins --network" 2>&1 | Out-Null
 "--- 2. FOUTE checksum: update moet worden geweigerd"
 Write-Json ('0' * 64)
 Invoke-Expression "$wp transient delete ow_update_info" | Out-Null
