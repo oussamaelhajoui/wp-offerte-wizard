@@ -123,6 +123,7 @@
 .status.bad { background: #fdecea; color: #7f1d1d; }
 .room { margin-top: 12px; padding: 14px; border: 1px solid var(--ow-line); border-radius: 16px; }
 .tworow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tworow.one { grid-template-columns: 1fr; }
 .totals { margin-top: 16px; padding: 12px 14px; border-radius: 14px; background: var(--ow-soft); font-weight: 700; text-align: center; }
 
 /* overzicht */

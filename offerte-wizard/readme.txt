@@ -1,7 +1,7 @@
 === Offerte Wizard ===
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.4.1
+Stable tag: 1.5.0
 License: GPLv2 or later
 
 Stap-voor-stap offerteaanvraag met prijsindicatie en bouwplan-uitlezing.
@@ -24,6 +24,8 @@ Instellingen > Offerte Wizard > "Na het versturen": kies of de klant de prijs zi
 Per aanvraag (menu Offerte-aanvragen): eigen prijs invullen en versturen, of markeren als zelf afgehandeld.
 
 == Changelog ==
+= 1.5.0 =
+Nieuwe stap "Wat moet er gestukt worden?": alleen wanden, alleen plafonds of beide. De flow slaat onnodige vragen over (m² en daktype) en prijs, overzicht en mails rekenen alleen met de gekozen oppervlakken.
 = 1.4.1 =
 Nieuwe versies verschijnen binnen een uur bij Plugins (voorheen tot 12 uur).
 = 1.4.0 =

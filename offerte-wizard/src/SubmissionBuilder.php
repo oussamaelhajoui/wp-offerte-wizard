@@ -25,8 +25,16 @@ final class SubmissionBuilder
         $m2 = (string) $answers['m2'];
         $wand = NumberParser::parse(self::scalar($answers['m2_wand'] ?? ''));
         $plafond = NumberParser::parse(self::scalar($answers['m2_plafond'] ?? ''));
+        $need = Flow::surfaces($answers);
         if ($m2 === 'nee') {
             $wand = $plafond = null;
+        }
+        // Een oppervlak dat niet gestuct hoeft te worden telt nergens mee (ook niet na een bouwplan met beide maten).
+        if (!$need['wand']) {
+            $wand = null;
+        }
+        if (!$need['plafond']) {
+            $plafond = null;
         }
         $schilderen = (string) $answers['schilderen'] === 'ja';
         $pricing = ($wand !== null || $plafond !== null)
@@ -36,10 +44,11 @@ final class SubmissionBuilder
         $token = self::scalar($answers['plan_token'] ?? '');
         $data = [
             'type_woning' => (string) $answers['type_woning'],
+            'onderdelen' => (string) $answers['onderdelen'],
             'm2_keuze' => $m2,
             'wand' => $wand,
             'plafond' => $plafond,
-            'daktype' => $m2 === 'nee' ? '' : (string) ($answers['daktype'] ?? ''),
+            'daktype' => ($m2 === 'nee' || !$need['plafond']) ? '' : (string) ($answers['daktype'] ?? ''),
             'ondergrond' => $m2 === 'nee' ? array_values(array_intersect((array) $answers['ondergrond'], Flow::ONDERGROND)) : [],
             'schilderen' => $schilderen,
             'periode_keuze' => (string) $answers['periode_keuze'],
@@ -68,7 +77,7 @@ final class SubmissionBuilder
         if (!$showPrice) {
             $p = null;
         }
-        $werk = $d['schilderen'] ? 'Stucwerk en Schilderwerk' : 'Stucwerk';
+        $werk = 'Stucwerk (' . self::surfaceText($d) . ')' . ($d['schilderen'] ? ' en Schilderwerk' : '');
         $total = ($d['wand'] ?? 0) + ($d['plafond'] ?? 0);
         return [
             'periode' => self::periodText($d),
@@ -83,6 +92,12 @@ final class SubmissionBuilder
             'price_hidden' => $hidden,
             'plaats' => $d['locality'],
         ];
+    }
+
+    /** "wanden", "plafonds" of "wanden en plafonds". */
+    public static function surfaceText(array $d): string
+    {
+        return ['wanden' => 'wanden', 'plafonds' => 'plafonds'][$d['onderdelen'] ?? 'beide'] ?? 'wanden en plafonds';
     }
 
     const PERIOD_CHOICES = ['kort' => 'Op korte termijn', '3m' => 'Binnen 3 maanden', '6m' => '3-6 maanden'];

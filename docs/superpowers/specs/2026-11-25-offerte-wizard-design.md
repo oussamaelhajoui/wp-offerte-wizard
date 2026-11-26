@@ -112,3 +112,6 @@ Klusoverzicht-account, online betalen, kalenderkoppeling, meertaligheid.
 
 ## Periodekeuze (1.4.0)
 Voor de kalender staat de stap `periode` ("Weet je al in welke periode?"): "Ik weet het" gaat door naar het datumbereik; "Op korte termijn", "Binnen 3 maanden" en "3-6 maanden" slaan de kalender over. De gekozen termijn staat in overzicht en mails; datums van een eerdere keuze worden genegeerd. De welkomstpagina beschrijft in eerste persoon wat de klant van ons krijgt (scherpe prijs, samen naar beschikbaarheid kijken, klusduur, checklist).
+
+## Onderdelen (1.5.0)
+Stap `onderdelen` na het type woning: alleen wanden, alleen plafonds of beide. Alleen wanden slaat m² plafond en daktype over; alleen plafonds slaat m² wanden over. Bouwplan-controle toont alleen de relevante maten. Een niet-gekozen oppervlak telt nergens mee: ook niet als de uitlezing het wel gaf. Prijs, overzicht ("Stucwerk (wanden)") en mail ("Te stucen: wanden") volgen de keuze. Regels in de flow-definitie hebben meerdere voorwaarden (`all`), identiek geëvalueerd in PHP en JS.

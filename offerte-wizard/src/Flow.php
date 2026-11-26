@@ -19,8 +19,11 @@ final class Flow
         $n = static function (string $default, array $when = []): array {
             return ['when' => $when, 'default' => $default];
         };
-        $w = static function (string $field, string $eq, string $goto): array {
-            return ['field' => $field, 'eq' => $eq, 'goto' => $goto];
+        // Een regel geldt als ALLE voorwaarden kloppen: $w([['m2', 'ja'], ['onderdelen', 'wanden']], 'volgende-stap').
+        $w = static function (array $conditions, string $goto): array {
+            return ['all' => array_map(static function (array $c): array {
+                return ['field' => $c[0], 'eq' => $c[1]];
+            }, $conditions), 'goto' => $goto];
         };
         return [
             [
@@ -42,6 +45,16 @@ final class Flow
                     ['value' => 'nieuwbouw', 'label' => 'Nieuwbouw', 'icon' => 'crane'],
                     ['value' => 'renovatie', 'label' => 'Renovatie', 'icon' => 'tools'],
                 ],
+                'next' => $n('onderdelen'),
+            ],
+            [
+                'id' => 'onderdelen', 'type' => 'choice', 'phase' => 1, 'field' => 'onderdelen',
+                'title' => 'Wat moet er gestukt worden?', 'subtitle' => 'Selecteer één van de opties.',
+                'options' => [
+                    ['value' => 'wanden', 'label' => 'Alleen wanden', 'icon' => 'board'],
+                    ['value' => 'plafonds', 'label' => 'Alleen plafonds', 'icon' => 'flat'],
+                    ['value' => 'beide', 'label' => 'Wanden en plafonds', 'icon' => 'house'],
+                ],
                 'next' => $n('m2'),
             ],
             [
@@ -53,14 +66,18 @@ final class Flow
                     ['value' => 'nee', 'label' => 'Nee, help mij even', 'sub' => 'We berekenen dit later samen', 'icon' => 'ruler'],
                     ['value' => 'bouwplan', 'label' => 'Ik heb een bouwplan', 'sub' => 'Upload je tekening, wij lezen de m² uit', 'icon' => 'plan', 'requires' => 'bouwplan'],
                 ],
-                'next' => $n('m2-wand', [$w('m2', 'nee', 'wand-ondergrond'), $w('m2', 'bouwplan', 'bouwplan-upload')]),
+                'next' => $n('m2-wand', [
+                    $w([['m2', 'nee']], 'wand-ondergrond'),
+                    $w([['m2', 'bouwplan']], 'bouwplan-upload'),
+                    $w([['m2', 'ja'], ['onderdelen', 'plafonds']], 'm2-plafond'),
+                ]),
             ],
             [
                 'id' => 'm2-wand', 'type' => 'number', 'phase' => 2, 'field' => 'm2_wand',
                 'title' => 'Vul m² voor wanden in',
                 'subtitle' => 'Lengte x hoogte per wand (deurposten & kozijnen meegerekend) en tel bij elkaar op.',
                 'placeholder' => '200m2', 'hint' => ['title' => 'Ben je niet helemaal zeker?', 'text' => 'Een ruwe schatting is ook goed!'],
-                'next' => $n('m2-plafond'),
+                'next' => $n('m2-plafond', [$w([['onderdelen', 'wanden']], 'schilderen')]),
             ],
             [
                 'id' => 'm2-plafond', 'type' => 'number', 'phase' => 2, 'field' => 'm2_plafond',
@@ -97,7 +114,7 @@ final class Flow
             [
                 'id' => 'bouwplan-controle', 'type' => 'review', 'phase' => 2,
                 'title' => 'Klopt dit?', 'subtitle' => 'Controleer de afmetingen en pas aan waar nodig.',
-                'next' => $n('type-plafond'),
+                'next' => $n('type-plafond', [$w([['onderdelen', 'wanden']], 'schilderen')]),
             ],
             [
                 'id' => 'schilderen', 'type' => 'choice', 'phase' => 2, 'field' => 'schilderen',
@@ -117,7 +134,7 @@ final class Flow
                     ['value' => '3m', 'label' => 'Binnen 3 maanden', 'icon' => 'calendar'],
                     ['value' => '6m', 'label' => '3-6 maanden', 'icon' => 'calendar'],
                 ],
-                'next' => $n('contactgegevens', [$w('periode_keuze', 'weet', 'kalender')]),
+                'next' => $n('contactgegevens', [$w([['periode_keuze', 'weet']], 'kalender')]),
             ],
             [
                 'id' => 'kalender', 'type' => 'daterange', 'phase' => 2,
@@ -168,12 +185,29 @@ final class Flow
         if ($step === null || empty($step['next'])) {
             return null;
         }
-        foreach ($step['next']['when'] as $w) {
-            if (isset($answers[$w['field']]) && (string) $answers[$w['field']] === $w['eq']) {
-                return $w['goto'];
+        foreach ($step['next']['when'] as $rule) {
+            $match = true;
+            foreach ($rule['all'] as $c) {
+                if (!isset($answers[$c['field']]) || (string) $answers[$c['field']] !== $c['eq']) {
+                    $match = false;
+                    break;
+                }
+            }
+            if ($match) {
+                return $rule['goto'];
             }
         }
         return $step['next']['default'];
+    }
+
+    /**
+     * Welke oppervlakken de klant wil laten stucen.
+     * @return array{wand:bool,plafond:bool}
+     */
+    public static function surfaces(array $answers): array
+    {
+        $o = $answers['onderdelen'] ?? 'beide';
+        return ['wand' => $o !== 'plafonds', 'plafond' => $o !== 'wanden'];
     }
 
     /** Foutmelding voor deze stap, of null als de antwoorden kloppen. */
@@ -210,8 +244,9 @@ final class Flow
                 if (!is_array($rooms) || !$rooms) {
                     return null;
                 }
-                $ok = NumberParser::parse(self::str($answers['m2_wand'] ?? '')) !== null
-                    && NumberParser::parse(self::str($answers['m2_plafond'] ?? '')) !== null;
+                $need = self::surfaces($answers);
+                $ok = (!$need['wand'] || NumberParser::parse(self::str($answers['m2_wand'] ?? '')) !== null)
+                    && (!$need['plafond'] || NumberParser::parse(self::str($answers['m2_plafond'] ?? '')) !== null);
                 return $ok ? null : self::ERR_NUMBER;
             case 'daterange':
                 return Validator::period(self::str($answers['periode_start'] ?? ''), self::str($answers['periode_eind'] ?? ''), $today);

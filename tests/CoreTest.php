@@ -79,6 +79,31 @@ final class CoreTest extends TestCase
         $this->assertSame(Validator::MSG_PERIOD, Validator::period('2026-02-30', '2026-03-01', '2026-01-01'));
     }
 
+    public function testFlowRoutesOnSurfaces(): void
+    {
+        $this->assertSame('onderdelen', Flow::next('type-woning', []));
+        $this->assertSame('m2', Flow::next('onderdelen', []));
+        $this->assertSame('m2-wand', Flow::next('m2', ['m2' => 'ja', 'onderdelen' => 'wanden']));
+        $this->assertSame('m2-wand', Flow::next('m2', ['m2' => 'ja', 'onderdelen' => 'beide']));
+        $this->assertSame('m2-plafond', Flow::next('m2', ['m2' => 'ja', 'onderdelen' => 'plafonds']));
+        $this->assertSame('wand-ondergrond', Flow::next('m2', ['m2' => 'nee', 'onderdelen' => 'plafonds']));
+        $this->assertSame('bouwplan-upload', Flow::next('m2', ['m2' => 'bouwplan', 'onderdelen' => 'wanden']));
+        $this->assertSame('schilderen', Flow::next('m2-wand', ['onderdelen' => 'wanden']));
+        $this->assertSame('m2-plafond', Flow::next('m2-wand', ['onderdelen' => 'beide']));
+        $this->assertSame('schilderen', Flow::next('bouwplan-controle', ['onderdelen' => 'wanden']));
+        $this->assertSame('type-plafond', Flow::next('bouwplan-controle', ['onderdelen' => 'plafonds']));
+        $this->assertSame('type-plafond', Flow::next('bouwplan-controle', ['onderdelen' => 'beide']));
+        $this->assertSame(['wand' => true, 'plafond' => false], Flow::surfaces(['onderdelen' => 'wanden']));
+        $this->assertSame(['wand' => false, 'plafond' => true], Flow::surfaces(['onderdelen' => 'plafonds']));
+        $this->assertSame(['wand' => true, 'plafond' => true], Flow::surfaces([]));
+        $this->assertSame(Flow::ERR_CHOICE, Flow::validate('onderdelen', [], '2026-11-26'));
+        $this->assertNull(Flow::validate('onderdelen', ['onderdelen' => 'plafonds'], '2026-11-26'));
+        // De controlestap vraagt alleen de maten die nodig zijn.
+        $rooms = [['floor_m2' => 1]];
+        $this->assertNull(Flow::validate('bouwplan-controle', ['rooms' => $rooms, 'onderdelen' => 'wanden', 'm2_wand' => '10'], '2026-11-26'));
+        $this->assertSame(Flow::ERR_NUMBER, Flow::validate('bouwplan-controle', ['rooms' => $rooms, 'onderdelen' => 'wanden'], '2026-11-26'));
+    }
+
     public function testFlowBranches(): void
     {
         $this->assertSame('m2-wand', Flow::next('m2', ['m2' => 'ja']));

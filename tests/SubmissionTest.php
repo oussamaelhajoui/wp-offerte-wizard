@@ -9,7 +9,7 @@ final class SubmissionTest extends TestCase
     private function jaAnswers(): array
     {
         return [
-            'type_woning' => 'nieuwbouw', 'm2' => 'ja', 'm2_wand' => '200m2', 'm2_plafond' => '200', 'daktype' => 'plat',
+            'type_woning' => 'nieuwbouw', 'onderdelen' => 'beide', 'm2' => 'ja', 'm2_wand' => '200m2', 'm2_plafond' => '200', 'daktype' => 'plat',
             'schilderen' => 'ja', 'periode_keuze' => 'weet', 'periode_start' => '2026-11-27', 'periode_eind' => '2026-12-05',
             'first_name' => 'Jan', 'last_name' => 'Alleman', 'email' => 'jan@example.nl', 'phone_number' => '0612548798',
             'address_line' => 'Straat 1', 'locality' => 'Eindhoven', 'post_code' => '5611ab', 'beschrijving' => '',
@@ -26,7 +26,66 @@ final class SubmissionTest extends TestCase
         $s = SubmissionBuilder::summary($r['data']);
         $this->assertSame('27 november - 5 december', $s['periode']);
         $this->assertSame(400.0, $s['totaal']);
-        $this->assertSame('Stucwerk en Schilderwerk', $s['werk']);
+        $this->assertSame('Stucwerk (wanden en plafonds) en Schilderwerk', $s['werk']);
+    }
+
+    public function testOnlyWalls(): void
+    {
+        $a = $this->jaAnswers();
+        $a['onderdelen'] = 'wanden';
+        unset($a['m2_plafond'], $a['daktype']);
+        $r = SubmissionBuilder::build($a, '2026-11-26', Settings::defaults());
+        $this->assertSame([], $r['errors']);
+        $this->assertSame(200.0, $r['data']['wand']);
+        $this->assertNull($r['data']['plafond']);
+        $this->assertSame('', $r['data']['daktype']);
+        $this->assertSame(['min' => 3200, 'max' => 4400], $r['data']['pricing']['stucwerk']);
+        $this->assertSame(['min' => 3514, 'max' => 4100], $r['data']['pricing']['schilderwerk']);
+        $s = SubmissionBuilder::summary($r['data']);
+        $this->assertSame('Stucwerk (wanden) en Schilderwerk', $s['werk']);
+        $this->assertSame(200.0, $s['totaal']);
+        $this->assertStringContainsString('Te stucen: wanden', Mailer::compose($r['data'])['body']);
+        $this->assertStringNotContainsString('m² plafonds', Mailer::compose($r['data'])['body']);
+        unset($a['m2_wand']);
+        $this->assertArrayHasKey('m2-wand', SubmissionBuilder::build($a, '2026-11-26', Settings::defaults())['errors']);
+    }
+
+    public function testOnlyCeilings(): void
+    {
+        $a = $this->jaAnswers();
+        $a['onderdelen'] = 'plafonds';
+        $a['m2_plafond'] = '50';
+        unset($a['m2_wand']);
+        $r = SubmissionBuilder::build($a, '2026-11-26', Settings::defaults());
+        $this->assertSame([], $r['errors']);
+        $this->assertNull($r['data']['wand']);
+        $this->assertSame(50.0, $r['data']['plafond']);
+        $this->assertSame('plat', $r['data']['daktype']);
+        $this->assertSame(['min' => 700, 'max' => 1000], $r['data']['pricing']['stucwerk']);
+        $this->assertSame('Stucwerk (plafonds) en Schilderwerk', SubmissionBuilder::summary($r['data'])['werk']);
+        unset($a['m2_plafond']);
+        $this->assertArrayHasKey('m2-plafond', SubmissionBuilder::build($a, '2026-11-26', Settings::defaults())['errors']);
+        $b = $this->jaAnswers();
+        $b['onderdelen'] = 'plafonds';
+        unset($b['daktype']);
+        $this->assertArrayHasKey('type-plafond', SubmissionBuilder::build($b, '2026-11-26', Settings::defaults())['errors']);
+    }
+
+    public function testBouwplanOnlyWallsIgnoresCeilingMeasures(): void
+    {
+        $a = $this->jaAnswers();
+        $a['m2'] = 'bouwplan';
+        $a['onderdelen'] = 'wanden';
+        $a['plan_token'] = str_repeat('c', 32);
+        $a['rooms'] = [['name' => 'Woonkamer', 'floor_m2' => '20', 'wall_m2' => '50']];
+        $a['m2_wand'] = '50';
+        $a['m2_plafond'] = '20'; // stond nog in de antwoorden van de uitlezing
+        unset($a['daktype']);
+        $r = SubmissionBuilder::build($a, '2026-11-26', Settings::defaults());
+        $this->assertSame([], $r['errors']);
+        $this->assertSame(50.0, $r['data']['wand']);
+        $this->assertNull($r['data']['plafond']);
+        $this->assertSame(['min' => 800, 'max' => 1100], $r['data']['pricing']['stucwerk']);
     }
 
     public function testNeeBranchHasNoPrice(): void

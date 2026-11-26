@@ -26,6 +26,7 @@ final class Mailer
         $L[] = 'Klus';
         $L[] = '  Type: ' . ($d['type_woning'] === 'nieuwbouw' ? 'Nieuwbouw' : 'Renovatie');
         $L[] = '  Werkzaamheden: ' . ($d['schilderen'] ? 'Stucwerk en schilderwerk' : 'Stucwerk');
+        $L[] = '  Te stucen: ' . SubmissionBuilder::surfaceText($d);
         $L[] = '  Gewenste periode: ' . self::periodOf($d);
         $L[] = '  Weet m²?: ' . ['ja' => 'Ja, ongeveer', 'nee' => 'Nee, hulp gewenst', 'bouwplan' => 'Bouwplan geüpload'][$d['m2_keuze']];
         if ($d['wand'] !== null) {

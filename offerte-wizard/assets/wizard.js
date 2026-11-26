@@ -98,9 +98,17 @@
     if (!n) { return null; }
     var w = n.when || [];
     for (var i = 0; i < w.length; i++) {
-      if (String(answers[w[i].field]) === w[i].eq) { return w[i].goto; }
+      // een regel geldt als alle voorwaarden kloppen
+      var ok = w[i].all.every(function (c) { return String(answers[c.field]) === c.eq; });
+      if (ok) { return w[i].goto; }
     }
     return n['default'] || null;
+  }
+
+  /* Welke oppervlakken gestuct moeten worden (spiegel van Flow::surfaces in PHP). */
+  function surfaces(a) {
+    var o = a.onderdelen || 'beide';
+    return { wand: o !== 'plafonds', plafond: o !== 'wanden' };
   }
 
   /* Afbeeldingen verkleinen voor upload (sneller op mobiel). */
@@ -298,7 +306,8 @@
         return a.plan_token ? null : t.upload;
       case 'review':
         if (!a.rooms || !a.rooms.length) { return null; }
-        return (parseNum(a.m2_wand) !== null && parseNum(a.m2_plafond) !== null) ? null : t.number;
+        var need = surfaces(a);
+        return ((!need.wand || parseNum(a.m2_wand) !== null) && (!need.plafond || parseNum(a.m2_plafond) !== null)) ? null : t.number;
       case 'daterange':
         return (a.periode_start && a.periode_eind) ? null : t.period;
       case 'contact':
@@ -592,7 +601,7 @@
   };
 
   Wizard.prototype.r_review = function (step, main) {
-    var self = this, a = this.state.answers;
+    var self = this, a = this.state.answers, need = surfaces(a);
     this.titles(step, main);
     var totals = el('div', 'totals');
     function sum() {
@@ -600,7 +609,10 @@
       (a.rooms || []).forEach(function (r) { f += parseNum(r.floor_m2) || 0; w += parseNum(r.wall_m2) || 0; });
       a.m2_plafond = String(Math.round(f * 10) / 10);
       a.m2_wand = String(Math.round(w * 10) / 10);
-      totals.textContent = 'Totaal: ' + fmtNum(f) + ' m² plafond, ' + fmtNum(w) + ' m² wanden';
+      var parts = [];
+      if (need.plafond) { parts.push(fmtNum(f) + ' m² plafond'); }
+      if (need.wand) { parts.push(fmtNum(w) + ' m² wanden'); }
+      totals.textContent = 'Totaal: ' + parts.join(', ');
       self.save();
     }
     function numberField(labelText, get, set) {
@@ -619,9 +631,9 @@
       a.rooms.forEach(function (r, i) {
         var card = el('div', 'room');
         card.appendChild(el('strong', null, r.name || 'Ruimte ' + (i + 1)));
-        var row = el('div', 'tworow');
-        row.appendChild(numberField('Plafond (m²)', function () { return r.floor_m2; }, function (v) { r.floor_m2 = v; sum(); }));
-        row.appendChild(numberField('Wanden (m²)', function () { return r.wall_m2; }, function (v) { r.wall_m2 = v; sum(); }));
+        var row = el('div', need.wand && need.plafond ? 'tworow' : 'tworow one');
+        if (need.plafond) { row.appendChild(numberField('Plafond (m²)', function () { return r.floor_m2; }, function (v) { r.floor_m2 = v; sum(); })); }
+        if (need.wand) { row.appendChild(numberField('Wanden (m²)', function () { return r.wall_m2; }, function (v) { r.wall_m2 = v; sum(); })); }
         card.appendChild(row);
         main.appendChild(card);
       });
@@ -629,8 +641,8 @@
       sum();
     } else {
       main.appendChild(el('div', 'note', 'We konden geen maten uitlezen. Vul de m² zelf in als je ze weet, of laat leeg: dan bekijken wij je bouwplan.'));
-      main.appendChild(numberField('Wanden (m²)', function () { return a.m2_wand; }, function (v) { a.m2_wand = v; self.save(); }));
-      main.appendChild(numberField('Plafonds (m²)', function () { return a.m2_plafond; }, function (v) { a.m2_plafond = v; self.save(); }));
+      if (need.wand) { main.appendChild(numberField('Wanden (m²)', function () { return a.m2_wand; }, function (v) { a.m2_wand = v; self.save(); })); }
+      if (need.plafond) { main.appendChild(numberField('Plafonds (m²)', function () { return a.m2_plafond; }, function (v) { a.m2_plafond = v; self.save(); })); }
     }
   };
 
