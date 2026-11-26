@@ -109,3 +109,6 @@ Klusoverzicht-account, online betalen, kalenderkoppeling, meertaligheid.
 ## Open punten
 - Stucwerkprijzen per m² moeten door de eigenaar worden bevestigd.
 - Of de plugin de bestaande pagina `/offerte-aanvragen` vervangt of ernaast staat, wordt bij installatie gekozen.
+
+## Periodekeuze (1.4.0)
+Voor de kalender staat de stap `periode` ("Weet je al in welke periode?"): "Ik weet het" gaat door naar het datumbereik; "Op korte termijn", "Binnen 3 maanden" en "3-6 maanden" slaan de kalender over. De gekozen termijn staat in overzicht en mails; datums van een eerdere keuze worden genegeerd. De welkomstpagina beschrijft in eerste persoon wat de klant van ons krijgt (scherpe prijs, samen naar beschikbaarheid kijken, klusduur, checklist).

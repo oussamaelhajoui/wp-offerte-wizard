@@ -86,7 +86,12 @@ final class CoreTest extends TestCase
         $this->assertSame('bouwplan-upload', Flow::next('m2', ['m2' => 'bouwplan']));
         $this->assertSame('type-plafond', Flow::next('bouwplan-controle', []));
         $this->assertSame('schilderen', Flow::next('wand-ondergrond', []));
-        $this->assertSame('kalender', Flow::next('schilderen', ['schilderen' => 'nee']));
+        $this->assertSame('periode', Flow::next('schilderen', ['schilderen' => 'nee']));
+        $this->assertSame('kalender', Flow::next('periode', ['periode_keuze' => 'weet']));
+        foreach (['kort', '3m', '6m'] as $c) {
+            $this->assertSame('contactgegevens', Flow::next('periode', ['periode_keuze' => $c]));
+        }
+        $this->assertSame('contactgegevens', Flow::next('kalender', []));
         $this->assertNull(Flow::next('overzicht', []));
     }
 

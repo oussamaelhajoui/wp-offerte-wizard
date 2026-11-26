@@ -26,7 +26,7 @@ final class Mailer
         $L[] = 'Klus';
         $L[] = '  Type: ' . ($d['type_woning'] === 'nieuwbouw' ? 'Nieuwbouw' : 'Renovatie');
         $L[] = '  Werkzaamheden: ' . ($d['schilderen'] ? 'Stucwerk en schilderwerk' : 'Stucwerk');
-        $L[] = '  Gewenste periode: ' . self::period($d['start'], $d['eind']);
+        $L[] = '  Gewenste periode: ' . self::periodOf($d);
         $L[] = '  Weet m²?: ' . ['ja' => 'Ja, ongeveer', 'nee' => 'Nee, hulp gewenst', 'bouwplan' => 'Bouwplan geüpload'][$d['m2_keuze']];
         if ($d['wand'] !== null) {
             $L[] = '  m² wanden: ' . self::n($d['wand']);
@@ -102,7 +102,7 @@ final class Mailer
             'Bedankt voor je aanvraag bij ' . $brand . '. We hebben je gegevens ontvangen en nemen zo snel mogelijk contact met je op om je klus samen door te nemen en een offerte op te maken.',
             '',
             'Je aanvraag in het kort:',
-            '  Periode: ' . self::period($d['start'], $d['eind']),
+            '  Periode: ' . self::periodOf($d),
             '  Locatie: ' . $d['address_line'] . ', ' . $d['post_code'] . ' ' . $d['locality'],
             '',
             'Met vriendelijke groet,',
@@ -131,7 +131,7 @@ final class Mailer
         }
         $L[] = '';
         $L[] = 'Je aanvraag';
-        $L[] = '  Periode: ' . self::period($d['start'], $d['eind']);
+        $L[] = '  Periode: ' . self::periodOf($d);
         $L[] = '  Locatie: ' . $d['address_line'] . ', ' . $d['post_code'] . ' ' . $d['locality'];
         $L[] = '';
         $L[] = 'Kloppen de gegevens niet of heb je vragen? Reageer gerust op deze mail.';
@@ -150,6 +150,15 @@ final class Mailer
     private static function oneLine(string $s): string
     {
         return trim(preg_replace('/[\r\n\t]+/', ' ', $s));
+    }
+
+    /** De gekozen termijn ("Binnen 3 maanden") of het gekozen datumbereik. */
+    private static function periodOf(array $d): string
+    {
+        if (($d['periode_keuze'] ?? 'weet') !== 'weet') {
+            return SubmissionBuilder::PERIOD_CHOICES[$d['periode_keuze']] ?? '';
+        }
+        return self::period($d['start'], $d['eind']);
     }
 
     /** "26-11-2026" voor één dag, anders "26-11-2026 t/m 29-11-2026". */

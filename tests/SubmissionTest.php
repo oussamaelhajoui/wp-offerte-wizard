@@ -10,7 +10,7 @@ final class SubmissionTest extends TestCase
     {
         return [
             'type_woning' => 'nieuwbouw', 'm2' => 'ja', 'm2_wand' => '200m2', 'm2_plafond' => '200', 'daktype' => 'plat',
-            'schilderen' => 'ja', 'periode_start' => '2026-11-27', 'periode_eind' => '2026-12-05',
+            'schilderen' => 'ja', 'periode_keuze' => 'weet', 'periode_start' => '2026-11-27', 'periode_eind' => '2026-12-05',
             'first_name' => 'Jan', 'last_name' => 'Alleman', 'email' => 'jan@example.nl', 'phone_number' => '0612548798',
             'address_line' => 'Straat 1', 'locality' => 'Eindhoven', 'post_code' => '5611ab', 'beschrijving' => '',
         ];
@@ -82,6 +82,39 @@ final class SubmissionTest extends TestCase
         $r = SubmissionBuilder::build($a, '2026-11-26', Settings::defaults());
         $this->assertSame([], $r['errors']);
         $this->assertNull($r['data']['pricing']);
+    }
+
+    /** @dataProvider termijnen */
+    public function testPeriodChoiceWithoutDates(string $keuze, string $tekst): void
+    {
+        $a = $this->jaAnswers();
+        $a['periode_keuze'] = $keuze;
+        unset($a['periode_start'], $a['periode_eind']);
+        $r = SubmissionBuilder::build($a, '2026-11-26', Settings::defaults());
+        $this->assertSame([], $r['errors']);
+        $this->assertSame('', $r['data']['start']);
+        $this->assertSame($tekst, SubmissionBuilder::summary($r['data'])['periode']);
+        $this->assertStringContainsString('Gewenste periode: ' . $tekst, Mailer::compose($r['data'])['body']);
+        $this->assertStringContainsString('Periode: ' . $tekst, Mailer::composeConfirmation($r['data'], 'X')['body']);
+    }
+
+    public static function termijnen(): array
+    {
+        return [['kort', 'Op korte termijn'], ['3m', 'Binnen 3 maanden'], ['6m', '3-6 maanden']];
+    }
+
+    public function testPeriodChoiceIsRequiredAndDatesIgnoredWhenNotChosen(): void
+    {
+        $a = $this->jaAnswers();
+        unset($a['periode_keuze']);
+        $this->assertArrayHasKey('periode', SubmissionBuilder::build($a, '2026-11-26', Settings::defaults())['errors']);
+        $a['periode_keuze'] = 'kort'; // oude datums van een eerdere keuze mogen niet meegaan
+        $d = SubmissionBuilder::build($a, '2026-11-26', Settings::defaults())['data'];
+        $this->assertSame('', $d['start']);
+        $this->assertSame('', $d['eind']);
+        $a['periode_keuze'] = 'weet';
+        $a['periode_start'] = '2020-01-01';
+        $this->assertArrayHasKey('kalender', SubmissionBuilder::build($a, '2026-11-26', Settings::defaults())['errors']);
     }
 
     public function testMailContents(): void

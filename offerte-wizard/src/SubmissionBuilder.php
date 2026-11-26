@@ -42,8 +42,9 @@ final class SubmissionBuilder
             'daktype' => $m2 === 'nee' ? '' : (string) ($answers['daktype'] ?? ''),
             'ondergrond' => $m2 === 'nee' ? array_values(array_intersect((array) $answers['ondergrond'], Flow::ONDERGROND)) : [],
             'schilderen' => $schilderen,
-            'start' => (string) $answers['periode_start'],
-            'eind' => (string) $answers['periode_eind'],
+            'periode_keuze' => (string) $answers['periode_keuze'],
+            'start' => (string) $answers['periode_keuze'] === 'weet' ? (string) $answers['periode_start'] : '',
+            'eind' => (string) $answers['periode_keuze'] === 'weet' ? (string) $answers['periode_eind'] : '',
             'first_name' => self::line($answers['first_name'], 60),
             'last_name' => self::line($answers['last_name'], 80),
             'email' => trim((string) $answers['email']),
@@ -70,7 +71,7 @@ final class SubmissionBuilder
         $werk = $d['schilderen'] ? 'Stucwerk en Schilderwerk' : 'Stucwerk';
         $total = ($d['wand'] ?? 0) + ($d['plafond'] ?? 0);
         return [
-            'periode' => self::periodLabel($d['start'], $d['eind']),
+            'periode' => self::periodText($d),
             'type' => $d['type_woning'] === 'nieuwbouw' ? 'Nieuwbouw' : 'Renovatie',
             'werk' => $werk,
             'wand' => $d['wand'],
@@ -82,6 +83,17 @@ final class SubmissionBuilder
             'price_hidden' => $hidden,
             'plaats' => $d['locality'],
         ];
+    }
+
+    const PERIOD_CHOICES = ['kort' => 'Op korte termijn', '3m' => 'Binnen 3 maanden', '6m' => '3-6 maanden'];
+
+    /** "27 november - 5 december" bij een gekozen datumbereik, anders de gekozen termijn ("Binnen 3 maanden"). */
+    public static function periodText(array $d): string
+    {
+        if (($d['periode_keuze'] ?? 'weet') !== 'weet') {
+            return self::PERIOD_CHOICES[$d['periode_keuze']] ?? '';
+        }
+        return self::periodLabel((string) $d['start'], (string) $d['eind']);
     }
 
     public static function periodLabel(string $start, string $end): string

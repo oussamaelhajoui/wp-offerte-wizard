@@ -25,15 +25,15 @@ final class Flow
         return [
             [
                 'id' => 'welkom', 'type' => 'welcome', 'phase' => 0,
-                'title' => 'Ontvang de beste prijs!', 'subtitle' => 'Binnen 3 minuten.',
-                'lead' => 'Dit kan je verwachten:',
+                'title' => 'Vraag je offerte aan', 'subtitle' => 'Dit duurt maar 3 minuten.',
+                'lead' => 'Zo helpen we je verder:',
                 'items' => [
-                    ['icon' => 'tag', 'title' => 'Prijs', 'text' => 'Scherpe prijsindicatie'],
-                    ['icon' => 'calendar', 'title' => 'Beschikbaarheid', 'text' => 'Kunnen we langskomen?'],
-                    ['icon' => 'clock', 'title' => 'Klusdagen', 'text' => 'Hoe lang duurt het?'],
-                    ['icon' => 'list', 'title' => 'Checklist', 'text' => 'Alle voorbereidingen'],
+                    ['icon' => 'tag', 'title' => 'Een scherpe prijs', 'text' => 'We bieden je een scherpe prijs voor je klus.'],
+                    ['icon' => 'calendar', 'title' => 'Beschikbaarheid', 'text' => 'We kijken samen naar de beschikbaarheid.'],
+                    ['icon' => 'clock', 'title' => 'Klusdagen', 'text' => 'We vertellen je hoe lang de klus duurt.'],
+                    ['icon' => 'list', 'title' => 'Checklist', 'text' => 'We maken samen een checklist voor de voorbereidingen.'],
                 ],
-                'cta' => 'Start nu', 'next' => $n('type-woning'),
+                'cta' => 'Start je aanvraag', 'next' => $n('type-woning'),
             ],
             [
                 'id' => 'type-woning', 'type' => 'choice', 'phase' => 1, 'field' => 'type_woning',
@@ -106,7 +106,18 @@ final class Flow
                     ['value' => 'ja', 'label' => 'Graag!', 'sub' => 'Ik wil mijn woning laten schilderen', 'icon' => 'check'],
                     ['value' => 'nee', 'label' => 'Niet nodig', 'sub' => 'Niet nodig, ik doe het zelf', 'icon' => 'cross'],
                 ],
-                'next' => $n('kalender'),
+                'next' => $n('periode'),
+            ],
+            [
+                'id' => 'periode', 'type' => 'choice', 'phase' => 2, 'field' => 'periode_keuze',
+                'title' => 'Weet je al in welke periode?', 'subtitle' => 'Kies wat het beste past.',
+                'options' => [
+                    ['value' => 'weet', 'label' => 'Ik weet het', 'sub' => 'Ik kies zelf een periode', 'icon' => 'check'],
+                    ['value' => 'kort', 'label' => 'Op korte termijn', 'icon' => 'clock'],
+                    ['value' => '3m', 'label' => 'Binnen 3 maanden', 'icon' => 'calendar'],
+                    ['value' => '6m', 'label' => '3-6 maanden', 'icon' => 'calendar'],
+                ],
+                'next' => $n('contactgegevens', [$w('periode_keuze', 'weet', 'kalender')]),
             ],
             [
                 'id' => 'kalender', 'type' => 'daterange', 'phase' => 2,

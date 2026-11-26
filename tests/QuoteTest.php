@@ -12,7 +12,7 @@ final class QuoteTest extends TestCase
     {
         $a = [
             'type_woning' => 'nieuwbouw', 'm2' => 'ja', 'm2_wand' => '200', 'm2_plafond' => '200', 'daktype' => 'plat',
-            'schilderen' => 'ja', 'periode_start' => '2026-11-27', 'periode_eind' => '2026-12-05',
+            'schilderen' => 'ja', 'periode_keuze' => 'weet', 'periode_start' => '2026-11-27', 'periode_eind' => '2026-12-05',
             'first_name' => 'Jan', 'last_name' => 'Alleman', 'email' => 'jan@example.nl', 'phone_number' => '0612548798',
             'address_line' => 'Straat 1', 'locality' => 'Eindhoven', 'post_code' => '5611AB',
         ];

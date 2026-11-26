@@ -1,7 +1,7 @@
 === Offerte Wizard ===
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 1.4.0
 License: GPLv2 or later
 
 Stap-voor-stap offerteaanvraag met prijsindicatie en bouwplan-uitlezing.
@@ -24,6 +24,8 @@ Instellingen > Offerte Wizard > "Na het versturen": kies of de klant de prijs zi
 Per aanvraag (menu Offerte-aanvragen): eigen prijs invullen en versturen, of markeren als zelf afgehandeld.
 
 == Changelog ==
+= 1.4.0 =
+Nieuwe stap vóór de kalender: "Weet je al in welke periode?" (Ik weet het, op korte termijn, binnen 3 maanden, 3-6 maanden). Duidelijkere, persoonlijkere teksten op de welkomstpagina.
 = 1.3.0 =
 Standaard wordt de prijsindicatie niet meer aan de klant getoond (aanpasbaar onder "Na het versturen"). De update-URL staat standaard op de GitHub-releases, dus updaten werkt vanzelf.
 = 1.2.0 =
