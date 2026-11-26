@@ -104,10 +104,11 @@ final class QuoteTest extends TestCase
     {
         $d = $this->data();
         $msg = "Je offerte ontvang je binnen 24 uur.\nTot snel!";
-        $hidden = SubmissionBuilder::summary($d, false, $msg);
+        $notice = ['title' => 'Bijna daar', 'message' => $msg];
+        $hidden = SubmissionBuilder::summary($d, false, $notice);
         $this->assertTrue($hidden['price_hidden']);
-        $this->assertSame($msg, $hidden['price_message']);
-        $this->assertSame('', SubmissionBuilder::summary($d, true, $msg)['price_message']);
+        $this->assertSame($notice, $hidden['price_notice']);
+        $this->assertNull(SubmissionBuilder::summary($d, true, $notice)['price_notice']);
         $c = Mailer::composeConfirmation($d, 'Afbouw Megens', $msg);
         $this->assertStringContainsString('binnen 24 uur', $c['body']);
         $this->assertStringContainsString('Met vriendelijke groet,', $c['body']);
@@ -117,6 +118,16 @@ final class QuoteTest extends TestCase
         $this->assertNotSame('', $old['hidden_price_message']);
         $this->assertSame('Binnen 24 uur.', Settings::sanitize(['hidden_price_message' => '<b>Binnen 24 uur.</b>'], $old)['hidden_price_message']);
         $this->assertSame($old['hidden_price_message'], Settings::sanitize(['hidden_price_message' => '  '], $old)['hidden_price_message']);
+        $this->assertSame('Bijna daar', Settings::sanitize(['hidden_price_title' => '<i>Bijna daar</i>'], $old)['hidden_price_title']);
+        $this->assertSame($old['hidden_price_title'], Settings::sanitize(['hidden_price_title' => ''], $old)['hidden_price_title']);
+        // wie de eerste standaardtekst (1.6.0) nooit aanpaste, krijgt de nieuwe
+        $legacy = array_merge($old, ['hidden_price_message' => Settings::LEGACY_HIDDEN_MESSAGE]);
+        $this->assertSame($old['hidden_price_message'], Settings::migrate($legacy)['hidden_price_message']);
+        $custom = array_merge($old, ['hidden_price_message' => 'Mijn eigen tekst']);
+        $this->assertSame('Mijn eigen tekst', Settings::migrate($custom)['hidden_price_message']);
+        $this->assertSame($old['hidden_price_message'], Settings::sanitize(['show_price' => '0'], $legacy)['hidden_price_message']);
+        $this->assertSame(0, Settings::sanitize(['show_price' => '0'], $old)['show_price']);
+        $this->assertSame(1, Settings::sanitize(['show_price' => '1'], $old)['show_price']);
     }
 
     public function testNewSettings(): void

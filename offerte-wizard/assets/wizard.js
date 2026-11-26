@@ -32,7 +32,8 @@
     board: 'M4 5h16v14H4z M8 9h8 M8 13h5',
     block: 'M4 8l8-4 8 4v8l-8 4-8-4z M4 8l8 4 8-4 M12 12v8',
     camera: 'M4 8h4l2-3h4l2 3h4v12H4z M12 17a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z',
-    file: 'M6 3h9l4 4v14H6z M14 3v5h5'
+    file: 'M6 3h9l4 4v14H6z M14 3v5h5',
+    mail: 'M3 5h18v14H3z M3 7l9 6 9-6'
   };
 
   /* ---------- helpers ---------- */
@@ -717,8 +718,15 @@
         p.appendChild(el('span', 'muted small', 'Dit is een richtprijs op basis van de ingevulde informatie. De definitieve offerte volgt na ons gesprek.'));
         box.appendChild(p);
       });
-      if (s.price_hidden) {
-        box.appendChild(el('p', 'muted pricehidden', s.price_message || 'Je prijsindicatie ontvang je van ons zodra we je aanvraag hebben bekeken.'));
+      if (s.price_hidden && s.price_notice) {
+        // Opvallend bericht in plaats van de prijs (tekst instelbaar in wp-admin).
+        var card = el('div', 'pricenotice');
+        var ic = el('span', 'ic'); ic.appendChild(icon('mail'));
+        var tx = el('div', 'tx');
+        if (s.price_notice.title) { tx.appendChild(el('strong', null, s.price_notice.title)); }
+        if (s.price_notice.message) { tx.appendChild(el('span', 'muted pricehidden', s.price_notice.message)); }
+        card.appendChild(ic); card.appendChild(tx);
+        box.appendChild(card);
       }
     } else {
       box.appendChild(el('p', 'muted', 'We berekenen de m² en de prijs samen met je tijdens ons telefoongesprek.'));

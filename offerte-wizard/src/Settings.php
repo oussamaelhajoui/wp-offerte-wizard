@@ -29,7 +29,8 @@ final class Settings
             'owner_link_admin' => 1,
             'quote_intro' => 'Bedankt voor je aanvraag. Hieronder vind je onze offerte.',
             // Wat de klant op het eindscherm leest (en in de bevestigingsmail) als de prijs niet getoond wordt.
-            'hidden_price_message' => 'Je prijsindicatie ontvang je van ons zodra we je aanvraag hebben bekeken.',
+            'hidden_price_title' => 'Je prijsindicatie is onderweg',
+            'hidden_price_message' => 'We bekijken je aanvraag persoonlijk en laten je zo snel mogelijk weten wat de klus kost. Je hoort van ons.',
             'price_stuc_wand_min' => 16.0,
             'price_stuc_wand_max' => 22.0,
             'price_stuc_plafond_min' => 14.0,
@@ -56,13 +57,24 @@ final class Settings
     public static function get(): array
     {
         $saved = function_exists('get_option') ? get_option(self::OPTION, []) : [];
-        return array_merge(self::defaults(), is_array($saved) ? $saved : []);
+        return self::migrate(array_merge(self::defaults(), is_array($saved) ? $saved : []));
+    }
+
+    /** De eerste standaardtekst (1.6.0) is vervangen door een betere; wie hem nooit aanpaste krijgt de nieuwe. */
+    const LEGACY_HIDDEN_MESSAGE = 'Je prijsindicatie ontvang je van ons zodra we je aanvraag hebben bekeken.';
+
+    public static function migrate(array $s): array
+    {
+        if (($s['hidden_price_message'] ?? '') === self::LEGACY_HIDDEN_MESSAGE) {
+            $s['hidden_price_message'] = self::defaults()['hidden_price_message'];
+        }
+        return $s;
     }
 
     /** Schoont formulierinvoer op; ongeldige waarden vallen terug op de oude. */
     public static function sanitize(array $in, array $old): array
     {
-        $d = array_merge(self::defaults(), $old);
+        $d = self::migrate(array_merge(self::defaults(), $old));
         $out = $d;
 
         $email = trim((string) ($in['recipient'] ?? ''));
@@ -77,6 +89,8 @@ final class Settings
         $out['quote_intro'] = $intro !== '' ? mb_substr($intro, 0, 1000) : $d['quote_intro'];
         $hm = trim(strip_tags(str_replace("\r\n", "\n", (string) ($in['hidden_price_message'] ?? ''))));
         $out['hidden_price_message'] = $hm !== '' ? mb_substr($hm, 0, 500) : $d['hidden_price_message'];
+        $ht = self::line($in['hidden_price_title'] ?? '', 80);
+        $out['hidden_price_title'] = $ht !== '' ? $ht : $d['hidden_price_title'];
 
         $brand = self::line($in['brand_name'] ?? '', 60);
         $out['brand_name'] = $brand !== '' ? $brand : $d['brand_name'];

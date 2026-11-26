@@ -57,8 +57,12 @@ final class Admin
                 ['brand_name', 'Bedrijfsnaam (in mails aan de klant)', 'text', ''],
             ],
             'Na het versturen: wat krijgt de klant?' => [
-                ['show_price', 'Toon de prijsindicatie aan de klant op het overzicht', 'checkbox', 'Uit = de klant ziet alleen "aanvraag ontvangen"; jij krijgt de berekende prijs wel in de mail.'],
-                ['hidden_price_message', 'Bericht als de prijs niet getoond wordt', 'textarea', 'Dit leest de klant op het eindscherm in plaats van de prijs, en in de ontvangstbevestiging (als die aan staat). Bijvoorbeeld: "Je persoonlijke offerte ontvang je binnen 24 uur per mail."'],
+                ['show_price', 'Prijsindicatie op het eindscherm', 'select', 'Jij krijgt de berekende prijs altijd in je eigen mail.', [
+                    '1' => 'Toon de prijsindicatie aan de klant',
+                    '0' => 'Toon geen prijs, maar een bericht (hieronder in te stellen)',
+                ]],
+                ['hidden_price_title', 'Titel van het bericht', 'text', 'Alleen zichtbaar als je hierboven kiest voor "geen prijs, wel een bericht".'],
+                ['hidden_price_message', 'Tekst van het bericht', 'textarea', 'Staat in een opvallende kaart op het eindscherm, in plaats van de prijs, en onderaan de ontvangstbevestiging (als die aan staat).'],
                 ['customer_mail', 'Mail naar de klant', 'select', 'Bij "ontvangstbevestiging" staat er geen prijs in; jij beslist daarna per aanvraag of en wat er verstuurd wordt.', [
                     'uit' => 'Geen mail naar de klant: ik neem zelf contact op',
                     'ontvangst' => 'Alleen een ontvangstbevestiging (zonder prijs)',

@@ -140,11 +140,11 @@ final class Rest
         }
         if ($mode !== 'uit' && !$quoted) {
             // Staat "prijs tonen" uit, dan krijgt de klant hier dezelfde boodschap als op het eindscherm.
-            $note = (!$showPrice && $data['pricing'] !== null) ? (string) $s['hidden_price_message'] : '';
+            $note = (!$showPrice && $data['pricing'] !== null) ? $s['hidden_price_title'] . "\n" . $s['hidden_price_message'] : '';
             $c = Mailer::composeConfirmation($data, (string) $s['brand_name'], $note);
             wp_mail($data['email'], $c['subject'], $c['body'], ['Content-Type: text/plain; charset=UTF-8']);
         }
-        return new \WP_REST_Response(['ok' => true, 'summary' => SubmissionBuilder::summary($data, $showPrice, (string) $s['hidden_price_message'])]);
+        return new \WP_REST_Response(['ok' => true, 'summary' => SubmissionBuilder::summary($data, $showPrice, ['title' => (string) $s['hidden_price_title'], 'message' => (string) $s['hidden_price_message']])]);
     }
 
     /** @return \WP_Error|null */

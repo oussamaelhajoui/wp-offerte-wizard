@@ -133,7 +133,11 @@
 .sumbox { margin: 16px 0; padding: 16px; border: 1px solid var(--ow-line); border-radius: 18px; }
 .m2row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding-bottom: 14px; border-bottom: 1px solid var(--ow-line); }
 .m2 { border: 0; padding: 4px; }
-.pricehidden { margin: 14px 0 0; white-space: pre-line; }
+.pricehidden { white-space: pre-line; }
+.pricenotice { display: flex; align-items: flex-start; gap: 14px; margin-top: 14px; padding: 16px; border-radius: 16px; background: var(--ow-soft); border: 1px solid var(--ow-line); border-left: 4px solid var(--ow-accent); }
+.pricenotice .ic { background: #fff; }
+.pricenotice .tx { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 16px; }
+.pricenotice strong { font-size: 18px; }
 .price { display: flex; flex-direction: column; gap: 4px; margin-top: 14px; }
 
 .spinner { width: 56px; height: 56px; margin: 28px auto; border: 6px solid var(--ow-soft); border-top-color: var(--ow-accent); border-radius: 50%; }
